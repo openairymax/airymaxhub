@@ -1,30 +1,24 @@
-# OpenAirymax 开源极境
+# OpenAirymax 开源极境  
 
-## 构建智能体操作系统的基石
+> 构建智能体操作系统的基石  
 
-OpenAirymax 是专注于 AI Agent 操作系统领域的开源组织，致力于为智能体工作负载构建服务端的操作系统基础设施。
+OpenAirymax 是专注于 AI Agent 操作系统领域的开源组织，为智能体工作负载构建服务端的操作系统基础设施。  
 
-## 组织使命
+## 组织使命  
 
-**见证 AI 的智能涌现**
+**见证 AI 的智能涌现**  
 
-OpenAirymax 旨在打造完整的 AI Agent 操作系统生态，从内核机制到应用平台，为多智能体协同、自主进化、内在安全提供全栈解决方案。
+打造完整的 AI Agent 操作系统生态，从内核机制到应用平台，为多智能体协同、自主进化、内在安全提供全栈解决方案。  
 
-## 核心项目
+## 核心项目  
 
-| 项目 | 说明 |
-|------|------|
-| [AgentOS](AgentOS/) | 智能体操作系统 |
+[AgentOS](AgentOS/) 智能体操作系统  
 
 ## 技术愿景
 
-<div align="center">
-
 **From data intelligence emerges**
 
-</div>
-
-OpenAirymax 的技术路线围绕以下核心理念展开：
+OpenAirymax 的技术路线围绕以下核心理念展开：  
 
 - **群体智能**: 通过操作系统级机制实现多 Agent 高效协同
 - **内在安全**: 沙箱隔离、权限仲裁、输入净化、审计追踪四重防护
@@ -32,38 +26,7 @@ OpenAirymax 的技术路线围绕以下核心理念展开：
 - **记忆分层**: L1 原始卷 → L2 特征层 → L3 结构层 → L4 模式层
 - **自主进化**: 动态调整策略，持续优化执行效果
 
-## 快速开始
-
-### AgentOS 快速入门
-
-```bash
-# 1. 克隆仓库
-git clone --recursive https://atomgit.com/openairymax/agentos.git
-cd agentos
-
-# 2. 安装依赖 (Ubuntu)
-sudo apt install -y build-essential cmake gcc g++ libssl-dev libsqlite3-dev ninja-build
-
-# 3. 构建内核
-mkdir build && cd build
-cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release
-cmake --build . --parallel $(nproc)
-
-# 4. 运行测试
-ctest --output-on-failure
-```
-
-### Docker 快速部署
-
-```bash
-# 构建镜像
-docker build -f scripts/deploy/docker/Dockerfile.kernel -t agentos:latest .
-
-# 运行容器
-docker run -d --name agentos -p 8080:8080 agentos:latest
-```
-
-## 文档索引
+## 文档索引  
 
 | 文档 | 核心内容 |
 |------|---------|
@@ -73,7 +36,7 @@ docker run -d --name agentos -p 8080:8080 agentos:latest
 | [安全策略](https://atomgit.com/openairymax/agentos/-/blob/main/SECURITY.md) | 安全报告与漏洞处理流程 |
 | [行为准则](https://atomgit.com/openairymax/agentos/-/blob/main/CODE_OF_CONDUCT.md) | 社区行为规范 |
 
-## 社区与参与
+## 社区与参与  
 
 我们欢迎所有形式的贡献：
 
