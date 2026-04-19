@@ -4,3 +4,12 @@
 [submodule "Docs-closed"]
 	path = Docs-closed
 	url = git@atomgit.com:openairymax/docs-closed.git
+[submodule "Desktop"]
+	path = Desktop
+	url = git@atomgit.com:openairymax/desktop.git
+[submodule "Docker"]
+	path = Docker
+	url = git@atomgit.com:openairymax/docker.git
+[submodule "Docs"]
+	path = Docs
+	url = git@atomgit.com:openairymax/docs.git
