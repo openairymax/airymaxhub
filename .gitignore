@@ -4,8 +4,6 @@
 .vscode/
 .idea/
 .git/
-.lingma/
-build/
 .venv/
-.本地/
 .vs/
+AgentOS-build/
