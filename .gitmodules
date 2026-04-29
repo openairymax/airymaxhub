@@ -13,3 +13,6 @@
 [submodule "Docs"]
 	path = Docs
 	url = git@atomgit.com:openairymax/docs.git
+[submodule "MemoryRovol"]
+	path = MemoryRovol
+	url = git@atomgit.com:spharx/memoryrovol.git
