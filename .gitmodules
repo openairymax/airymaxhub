@@ -1,8 +1,8 @@
 [submodule "AgentOS"]
 	path = AgentOS
 	url = git@atomgit.com:openairymax/agentos.git
-[submodule "Docs-closed"]
-	path = Docs-closed
+[submodule "DocsClosed"]
+	path = DocsClosed
 	url = git@atomgit.com:openairymax/docs-closed.git
 [submodule "Desktop"]
 	path = Desktop
