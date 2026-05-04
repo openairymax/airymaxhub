@@ -7,3 +7,6 @@
 .venv/
 .vs/
 AgentOS-build/
+AgentOS/build/
+AgentOS/ci-artifacts/
+AgentOS/Docker/
