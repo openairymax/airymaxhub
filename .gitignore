@@ -10,3 +10,5 @@ AgentOS-build/
 AgentOS/build/
 AgentOS/ci-artifacts/
 AgentOS/Docker/
+MemoryRovol-build/
+MemoryRovol/build/
