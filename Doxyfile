@@ -3,7 +3,7 @@
 
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = "AgentOS"
-PROJECT_NUMBER         = "0.0.5"
+PROJECT_NUMBER         = "0.1.0"
 PROJECT_BRIEF          = "Agent Operating System — Multi-Agent Framework with MemoryRovol"
 PROJECT_LOGO           =
 OUTPUT_DIRECTORY       = Docs/Capital_API/doxygen_html
