@@ -11,15 +11,32 @@
 # 构建输出目录
 # ========================
 AgentOS-build/
+AgentOS-build-*/
 AgentOS/build/
 AgentOS/ci-artifacts/
 AgentOS/Docker/
 MemoryRovol-build/
 MemoryRovol/build/
+MR-build/
+MR-build-*/
 Desktop-build/
 Docker/build/
 cmake-build-*/
 out/
+
+# ========================
+# 依赖目录
+# ========================
+node_modules/
+**/node_modules/
+
+# ========================
+# Python 缓存
+# ========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 
 # ========================
 # 编译产物
