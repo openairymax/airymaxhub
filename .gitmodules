@@ -1,5 +1,5 @@
 [submodule "AgentOS"]
-        path = AgentOS
+	path = AgentRT
         url = https://atomgit.com/openairymax/agentos.git
 [submodule "DocsClosed"]
         path = DocsClosed
