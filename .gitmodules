@@ -1,18 +1,18 @@
 [submodule "AgentRT"]
 	path = AgentRT
-        url = https://atomgit.com/openairymax/agentos.git
+        url = git@atomgit.com:openairymax/agentos.git
 [submodule "DocsClosed"]
         path = DocsClosed
-        url = https://atomgit.com/openairymax/docs-closed.git
+        url = git@atomgit.com:openairymax/docs-closed.git
 [submodule "Desktop"]
         path = Desktop
-        url = https://atomgit.com/openairymax/desktop.git
+        url = git@atomgit.com:openairymax/desktop.git
 [submodule "Docker"]
         path = Docker
-        url = https://atomgit.com/openairymax/docker.git
+        url = git@atomgit.com:openairymax/docker.git
 [submodule "Docs"]
         path = Docs
-        url = https://atomgit.com/openairymax/docs.git
+        url = git@atomgit.com:openairymax/docs.git
 [submodule "MemoryRovol"]
         path = MemoryRovol
-        url = https://atomgit.com/openairymax/memoryrovol.git
+        url = git@atomgit.com:spharx/memoryrovol.git

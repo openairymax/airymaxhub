@@ -267,6 +267,9 @@ docker-compose.override.yml
 # 本地开发文档（不追踪）
 # =============================================================================
 
+# contracts 目录：本地开发用的合约文件，不应纳入版本控制
+AgentRT/contracts/
+
 *.draft
 *.todo
 *.notes
