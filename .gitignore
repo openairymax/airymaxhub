@@ -1,10 +1,10 @@
 # =============================================================================
 # OpenAirymax 根目录 .gitignore
-# 版本：12.1.0
-# 最后更新：2026-06-19
+# 版本：13.0.0
+# 最后更新：2026-07-01
 # 说明：规范化排除所有不应纳入版本控制的文件和目录
 #
-# 项目结构（2026-06-19 当前）：
+# 项目结构（2026-07-01 当前）：
 #   AgentRT/       : 智能体运行时核心（v0.1.1）
 #   Desktop/       : 桌面客户端
 #   Docker/        : Docker 镜像构建
@@ -56,6 +56,23 @@ _build/
 build-*/
 cmake-build-*/
 out/
+
+# 运行时数据目录（daemon 运行时生成的内存/日志/检查点数据）
+/data/
+AgentRT/data/
+**/agentos/memory/
+**/agentos/checkpoints/
+
+# CTest 临时文件
+Testing/
+CTestTestfile.cmake
+CTestTestfile.cmake.in
+
+# Core dump 文件
+core
+core.*
+*.core
+vcore.*
 
 # =============================================================================
 # 依赖目录
@@ -234,6 +251,9 @@ test_output/
 *.profraw
 benchmark_results/
 perf_results/
+coverage/
+Coverage/
+.cache/
 
 # =============================================================================
 # 文档生成
