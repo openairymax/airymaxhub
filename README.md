@@ -1,13 +1,36 @@
-# Airymax 极境  
+# Airymax Hub
 
-> AI Agent Runtime Platform  
+Airymax 伞仓库（airymaxhub）— AI Agent 运行时平台工程。
 
-**OpenAirymax 开源极境**是专注于**AI Agent运行底座**的开源组织。  
+## 仓库结构
 
-**组织使命** ： 为群体智能的文明筑基  
-**项目核心** ： [AgentRT 运行底座](https://atomgit.com/openairymax/agentos)   
-**专业用户** ： [Docker](https://atomgit.com/openairymax/docker)    
-**个人用户** ： [桌面端](https://atomgit.com/openairymax/desktop)    
-**社区参与** ： [贡献指南](https://atomgit.com/openairymax/agentos/-/blob/main/CONTRIBUTING.md)，欢迎所有形式的贡献。   
-**主许可证** ： 项目采用 **AGPL v3 + Apache 2.0** 双许可证（SPDX: `AGPL-3.0-or-later OR Apache-2.0`），版权人 SPHARX Ltd. 详见各仓库 LICENSE 文件。   
-**核心代码** ： [Airymax AgentRT](https://atomgit.com/openairymax/agentos)   
+```
+airymaxhub/
+├── agentrt/          # AgentRT 管理仓（继承 AgentRT 历史，agentos.git）
+├── sdk/              # SDK 管理仓（sdk.git，6 语言 SDK 子模块）
+├── ecosystem/        # 生态管理仓（ecosystem.git，5 生态子模块）
+├── products/         # 产品管理仓（products.git，3 产品子模块）
+├── devtools/         # 开发工具仓（devtools.git，scripts/deploy/tests）
+├── docs/             # 开放文档仓（docs.git）
+└── docs-closed/      # 闭源文档仓（docs-closed.git）
+```
+
+## 子模块
+
+| 子模块 | 仓库 | 说明 |
+|--------|------|------|
+| agentrt | agentos.git | AgentRT 管理仓（atoms/commons/cupolas/heapstore/protocols/gateway/daemons） |
+| sdk | sdk.git | SDK 管理仓（sdk-python/sdk-go/sdk-rust/sdk-typescript/cli/tui） |
+| ecosystem | ecosystem.git | 生态管理仓（manager/prompts/examples/openlab/skills） |
+| products | products.git | 产品管理仓（desktop/docker/memoryrovol） |
+| devtools | devtools.git | 开发工具（scripts/deploy/tests） |
+| docs | docs.git | 开放文档 |
+| docs-closed | docs-closed.git | 闭源文档 |
+
+## 许可证
+
+- 开源代码: AGPL-3.0-or-later OR Apache-2.0
+- MemoryRovol: SPHARX Ltd. 商业 EULA v1.0
+
+Copyright (C) 2025-2026 SPHARX Ltd. All Rights Reserved.
+SPDX-License-Identifier: AGPL-3.0-or-later OR Apache-2.0
