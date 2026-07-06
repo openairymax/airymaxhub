@@ -1,12 +1,12 @@
-# Doxyfile 1.9.8 — AgentOS API Documentation
+# Doxyfile 1.9.8 — AgentRT API Documentation
 # R-09-23: Doxygen API文档配置
 
 DOXYFILE_ENCODING      = UTF-8
-PROJECT_NAME           = "AgentOS"
-PROJECT_NUMBER         = "0.1.0"
-PROJECT_BRIEF          = "Agent Operating System — Multi-Agent Framework with MemoryRovol"
+PROJECT_NAME           = "AgentRT"
+PROJECT_NUMBER         = "0.1.1"
+PROJECT_BRIEF          = "AI Agent Runtime Platform Engineering — Multi-Agent Framework with MemoryRovol"
 PROJECT_LOGO           =
-OUTPUT_DIRECTORY       = Docs/Capital_API/doxygen_html
+OUTPUT_DIRECTORY       = docs/api/doxygen_html
 CREATE_SUBDIRS         = NO
 ALLOW_UNICODE_NAMES    = NO
 OUTPUT_LANGUAGE        = Chinese

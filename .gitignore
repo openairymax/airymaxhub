@@ -1,16 +1,18 @@
 # =============================================================================
-# OpenAirymax 根目录 .gitignore
-# 版本：13.0.0
-# 最后更新：2026-07-01
-# 说明：规范化排除所有不应纳入版本控制的文件和目录
+# OpenAirymax 伞仓 .gitignore
+# 版本：14.0.0
+# 最后更新：2026-07-06
+# 说明：29 仓拆分方案 — 伞仓直属文件 + 7 个 submodule
 #
-# 项目结构（2026-07-01 当前）：
-#   AgentRT/       : 智能体运行时核心（v0.1.1）
-#   Desktop/       : 桌面客户端
-#   Docker/        : Docker 镜像构建
-#   Docs/          : 开放文档
-#   DocsClosed/    : 内部文档（发行规划、标准规范、任务看板等）
-#   MemoryRovol/   : 商业记忆模块（独立子仓库）
+# 伞仓结构（v4.0 29 仓拆分方案）：
+#   agentrt/      : 管理仓（核心运行底座，7 叶子仓 submodule）
+#   sdk/          : 管理仓（多语言 SDK，6 叶子仓 submodule）
+#   ecosystem/    : 管理仓（工程生态，5 叶子仓 submodule）
+#   products/     : 管理仓（用户制品，3 叶子仓 submodule）
+#   devtools/     : 顶层仓（开发工具）
+#   docs/         : 顶层仓（开放文档）
+#   docs-closed/  : 顶层仓（闭源管理文档）
+#   cmake/        : 伞仓直属 CMake 模块（5 个 .cmake 文件，非 submodule）
 # =============================================================================
 
 # =============================================================================
@@ -25,43 +27,34 @@
 *.code-workspace
 
 # =============================================================================
-# 构建输出目录
+# 构建输出目录（必须在源树外，BAN-33）
 # =============================================================================
 
-# AgentRT 构建
-AgentRT-build/
-AgentRT-build-*/
-AgentRT/ci-artifacts/
-
-# Desktop 构建
-Desktop-build/
-Desktop/build/
-
-# Docker 构建
-Docker/build/
-Docker/ci-artifacts/
-
-# MemoryRovol 构建
-MemoryRovol-build/
-MemoryRovol/build/
-MR-build/
-MR-build-*/
-
-# MemoryRovol 独立构建存根（本地生成，必排除）
-AgentRT-stubs/
-
-# 通用构建目录
+# 通用构建目录（必须在 /home/spharx/SpharxWorks/OpenAirymax 路径外）
 build/
 _build/
 build-*/
 cmake-build-*/
 out/
 
+# 各管理仓构建产物
+agentrt-build/
+agentrt/ci-artifacts/
+sdk-build/
+ecosystem-build/
+products-build/
+devtools-build/
+docs-build/
+docs-closed-build/
+
+# =============================================================================
 # 运行时数据目录（daemon 运行时生成的内存/日志/检查点数据）
+# =============================================================================
+
 /data/
-AgentRT/data/
-**/agentos/memory/
-**/agentos/checkpoints/
+agentrt/data/
+**/agentrt/memory/
+**/agentrt/checkpoints/
 
 # CTest 临时文件
 Testing/
@@ -169,7 +162,7 @@ cover.html
 .Spotlight-V100
 .TemporaryItems
 .Trashes
-.VolumeIcon.icn
+.VolumeIconicn
 .apdisk
 
 # Windows
@@ -280,15 +273,19 @@ docker-compose.override.yml
 *.arrow
 *.feather
 *.tflite
-/data/
 /datasets/
+
+# 14MB 大文件（原 gif 已在 commit ab49c6b 删除，不重新提交）
+# 获取方式见 README.md
+*.gif
+*.mp4
 
 # =============================================================================
 # 本地开发文档（不追踪）
 # =============================================================================
 
 # contracts 目录：本地开发用的合约文件，不应纳入版本控制
-AgentRT/contracts/
+agentrt/contracts/
 
 *.draft
 *.todo
