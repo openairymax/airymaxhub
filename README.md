@@ -25,22 +25,29 @@ airymaxhub/                       # 伞仓（本仓库）
 │   └── {manager,prompts,examples,openlab,skills}/  # 5 叶子仓
 ├── products/                     # 管理仓（面向用户制品）
 │   └── {desktop,docker,memoryrovol}/  # 3 叶子仓
-├── devtools/                     # 顶层仓（开发工具）
-└── docs/                         # 顶层仓（项目管理文档）
+├── agentrt-linux/                # 管理仓（AirymaxOS 智能体操作系统，0.1.1 仅占位）
+│   └── {airymaxos-kernel,services,security,memory,cognition,cloudnative,system,tests}/  # 8 叶子仓
+├── devtools/                     # 顶层仓（开发工具与配置中心）
+├── docs/                         # 顶层仓（开放文档中心）
+└── docs-closed/                  # 顶层仓（内部项目管理文档）
 ```
 
 ## 仓库组织  
 
-OpenAirymax 采用 **仓拆分方案**：
+OpenAirymax 采用 **38 仓拆分方案**：
 
 - **1 个伞仓**：`airymaxhub`（本仓库）
-- **4 个管理仓**：`agentrt`、`sdk`、`ecosystem`、`products`（各自管理叶子仓 submodule）
-- **21 个叶子仓**：分布在 4 个管理仓下
-- **3 个顶层仓**：`devtools`、`docs`、其它闭源仓
+- **5 个管理仓**：`agentrt`、`sdk`、`ecosystem`、`products`、`agentrt-linux`（各自管理叶子仓 submodule）
+- **29 个叶子仓**：分布在 5 个管理仓下（agentrt 7 + sdk 6 + ecosystem 5 + products 3 + agentrt-linux 8）
+- **3 个顶层仓**：`devtools`、`docs`、`docs-closed`
 
-除 `memoryrovol` 归属 `spharx` 组织外，其余 28 个仓库均归属 `openairymax` 组织。  
+除 `memoryrovol` 归属 `spharx` 组织外，其余 37 个仓库均归属 `openairymax` 组织。  
 
-## 许可证  
+## 许可证
 
-- 开源: AGPL-3.0-or-later OR Apache-2.0  
-- Copyright (C) SPHARX Ltd. All Rights Reserved.  
+- 开源: AGPL-3.0-or-later OR Apache-2.0
+- Copyright (c) 2025-2026 SPHARX Ltd. All Rights Reserved.
+
+SPDX-License-Identifier: AGPL-3.0-or-later OR Apache-2.0
+
+详见 [LICENSE](LICENSE) 和 [NOTICE](NOTICE)。

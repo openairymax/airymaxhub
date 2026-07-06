@@ -329,6 +329,6 @@ cd ../AgentRT-build && ctest -R benchmark
 
 *From data intelligence emerges.*
 
-© 2026 SPHARX Ltd. 保留所有权利。
+© 2025-2026 SPHARX Ltd. 保留所有权利。
 
 </div>

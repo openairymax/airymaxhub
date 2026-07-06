@@ -1140,4 +1140,4 @@ _（v0.0.3 为首次公开发布版本，无破坏性变更）_
 
 ---
 
-© 2026 SPHARX Ltd. All Rights Reserved.
+© 2025-2026 SPHARX Ltd. All Rights Reserved.
