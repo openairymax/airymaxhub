@@ -3,9 +3,11 @@
 OpenAirymax 开源极境
 > AI Agent Runtime Platform Engineering
 
-开源极境是一个专注于**智能体运行底座工程化平台**的开源组织。
+开源极境是一个专注于**智能体工程**的开源组织。开源极境开放两个项目：
+- AirymaxAgentRT 极境智能体运行底座平台工程  
+- AirymaxOS 极境智能体操作系统   
 
-## 项目结构
+## 项目结构  
 
 ```
 airymaxhub/                       # 伞仓（本仓库）
