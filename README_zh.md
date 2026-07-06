@@ -8,7 +8,7 @@ Powered by OpenAirymax
 [![star](https://gitee.com/spharx/agentos/badge/star.svg?theme=dark)](https://gitee.com/spharx/agentos)
 [![GitHub stars](https://img.shields.io/github/stars/SpharxTeam/AgentRT)](https://github.com/SpharxTeam/AgentRT/stargazers)
 
-[![Version](https://img.shields.io/badge/version-0.1.0-5a6b7e)](https://atomgit.com/openairymax/agentos)
+[![Version](https://img.shields.io/badge/version-0.1.1-5a6b7e)](https://atomgit.com/openairymax/agentos)
 [![License](https://img.shields.io/badge/license-AGPL--3.0+Apache--2.0-4a90d9)](LICENSE)
 [![Build](https://img.shields.io/badge/build-passing-2ea44f)](https://atomgit.com/openairymax/agentos)
 
@@ -291,4 +291,4 @@ Fork 项目 → 创建分支 → 开发测试 → 提交 PR → 代码审查 →
 
 <a href="https://atomgit.com/spharx/agentos">AtomGit</a> · <a href="https://gitee.com/spharx/agentos">Gitee</a> · <a href="https://github.com/SpharxTeam/AgentRT">GitHub</a> · <a href="https://spharx.cn">官方网站</a>
 
-© 2026 SPHARX Ltd. All Rights Reserved.  
+© 2025-2026 SPHARX Ltd. All Rights Reserved.  
