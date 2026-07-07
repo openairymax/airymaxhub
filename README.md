@@ -25,8 +25,8 @@ airymaxhub/                       # 伞仓（本仓库）
 │   └── {manager,prompts,examples,openlab,skills}/  # 5 叶子仓
 ├── products/                     # 管理仓（面向用户制品）
 │   └── {desktop,docker,memoryrovol}/  # 3 叶子仓
-├── agentrt-linux/                # 管理仓（AirymaxOS 智能体操作系统，0.1.1 仅占位）
-│   └── {airymaxos-kernel,services,security,memory,cognition,cloudnative,system,tests}/  # 8 叶子仓
+├── agentrt-linux/                # 管理仓（AirymaxOS 智能体操作系统，0.1.1 文档体系完成）
+│   └── {kernel,memory,security,cognition,services,system,cloudnative,airymaxos-tests}/  # 8 叶子仓
 ├── devtools/                     # 顶层仓（开发工具与配置中心）
 ├── docs/                         # 顶层仓（开放文档中心）
 └── docs-closed/                  # 顶层仓（内部项目管理文档）
@@ -41,7 +41,9 @@ OpenAirymax 采用 **38 仓拆分方案**：
 - **29 个叶子仓**：分布在 5 个管理仓下（agentrt 7 + sdk 6 + ecosystem 5 + products 3 + agentrt-linux 8）
 - **3 个顶层仓**：`devtools`、`docs`、`docs-closed`
 
-除 `memoryrovol` 归属 `spharx` 组织外，其余 37 个仓库均归属 `openairymax` 组织。  
+除 `memoryrovol` 归属 `spharx` 组织外，其余 37 个仓库均归属 `openairymax` 组织。
+
+> 完整的子模块结构、URL 约定与分支策略详见 [REPOSITORIES.md](REPOSITORIES.md)。
 
 ## 许可证
 
