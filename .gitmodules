@@ -2,6 +2,10 @@
 	path = agentrt
 	url = git@atomgit.com:openairymax/agentos.git
 	branch = main
+[submodule "agentrt-linux"]
+	path = agentrt-linux
+	url = git@atomgit.com:openairymax/agentrt-linux.git
+	branch = main
 [submodule "sdk"]
 	path = sdk
 	url = git@atomgit.com:openairymax/sdk.git
