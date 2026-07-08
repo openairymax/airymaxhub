@@ -23,7 +23,7 @@ OpenAirymax 采用 **四层 38 仓拆分方案**：
 airymaxhub/                                   # 伞仓（git@atomgit.com:openairymax/airymaxhub.git, main）
 │
 ├── agentrt/         [管理仓] → agentos.git    # 历史保留 URL（见 §4 约定 E1）
-│   ├── atoms/       [叶子仓]                  # A 类微内核原语（corekern/syscall/memory/taskflow）
+│   ├── atoms/       [叶子仓]                  # A 类微核心原语（corekern/syscall/memory/taskflow）
 │   ├── commons/     [叶子仓]
 │   ├── cupolas/     [叶子仓]                  # 安全框架
 │   ├── daemons/     [叶子仓]
