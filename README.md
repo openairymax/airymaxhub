@@ -11,12 +11,13 @@ OpenAirymax 开源极境，是一个专注于**智能体工程**的开源组织�
 
 ```
 airymaxhub/                       # 伞仓（本仓库）
-├── cmake/                        # 伞仓直属 CMake 模块
-├── agentrt/                      # 管理仓（AirymaxRT核心运行底座）
+├── cmake/                        # 伞仓直属模块
+├── agentrt/                      # 管理仓（AirymaxRT 核心运行底座）
+├── agentrt-linux/                # 管理仓（AirymaxOS 操作系统 Linux内核）
+├── agentrt-sel4/                 # 管理仓（AirymaxOS 操作系统 seL4内核）   
 ├── sdk/                          # 管理仓（多语言 SDK）
 ├── ecosystem/                    # 管理仓（工程生态系统）
 ├── products/                     # 管理仓（面向用户制品）
-├── agentrt-linux/                # 管理仓（AirymaxOS智能体操作系统）
 ├── devtools/                     # 顶层仓（开发工具与配置中心）
 ├── docs/                         # 顶层仓（开放文档中心）
 └── other/                        # 顶层仓（其他闭源项目）
