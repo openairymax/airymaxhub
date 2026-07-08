@@ -39,6 +39,7 @@ out/
 
 # 各管理仓构建产物
 agentrt-build/
+AgentRT-build/
 agentrt/ci-artifacts/
 sdk-build/
 ecosystem-build/
