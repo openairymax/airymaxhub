@@ -33,13 +33,13 @@ airymaxhub/                                   # 伞仓（git@atomgit.com:openair
 │
 ├── agentrt-linux/   [管理仓] → agentrt-linux.git   # AirymaxOS 智能体操作系统（与 agentrt 同级）
 │   ├── kernel/              [叶子仓]                # Linux 6.6 + sched_ext + eBPF + io_uring + Rust
-│   ├── memory/              [叶子仓]                # MemoryRovol 内核态 + CXL + PMEM + MGLRU 2.0
+│   ├── memory/              [叶子仓]                # MemoryRovol 内核态 + CXL + PMEM + MGLRU 多代 LRU
 │   ├── security/            [叶子仓]                # capability(seL4) + LSM + Landlock + 国密
 │   ├── cognition/           [叶子仓]                # CoreLoopThree kthread + LLM 调度 + Token 能效
 │   ├── services/            [叶子仓]                # VFS + 网络 + 12 daemons + io_uring 消息传递
 │   ├── system/              [叶子仓]                # RPM + dnf + 配置 + shell + DevStation
 │   ├── cloudnative/         [叶子仓]                # K8s CRD + containerd shim + OCI + CNI
-│   └── airymaxos-tests/     [叶子仓]                # 单元 + 集成 + 形式化验证(seL4) + Soak + Chaos
+│   └── tests-linux/     [叶子仓]                # 单元 + 集成 + 形式化验证(seL4) + Soak + Chaos
 │
 ├── sdk/             [管理仓] → sdk.git
 │   ├── sdk-python/     [叶子仓]
@@ -74,7 +74,7 @@ airymaxhub/                                   # 伞仓（git@atomgit.com:openair
 |---|----------|----------|------------|------|
 | 1 | `airymaxhub/.gitmodules` | 8 | 管理仓 + 顶层仓 | agentrt, agentrt-linux, sdk, ecosystem, products, docs, docs-closed, devtools |
 | 2 | `airymaxhub/agentrt/.gitmodules` | 7 | 叶子仓 | atoms, commons, cupolas, daemons, gateway, heapstore, protocols |
-| 3 | `airymaxhub/agentrt-linux/.gitmodules` | 8 | 叶子仓 | kernel, memory, security, cognition, services, system, cloudnative, airymaxos-tests |
+| 3 | `airymaxhub/agentrt-linux/.gitmodules` | 8 | 叶子仓 | kernel, memory, security, cognition, services, system, cloudnative, tests-linux |
 | 4 | `airymaxhub/sdk/.gitmodules` | 6 | 叶子仓 | sdk-python, sdk-go, sdk-rust, sdk-typescript, cli, tui |
 | 5 | `airymaxhub/ecosystem/.gitmodules` | 5 | 叶子仓 | manager, prompts, examples, openlab, skills |
 | 6 | `airymaxhub/products/.gitmodules` | 3 | 叶子仓 | desktop, docker, memoryrovol |
@@ -124,7 +124,7 @@ git@atomgit.com:openairymax/<仓库名>.git
 | services | 叶子仓 | `git@atomgit.com:openairymax/services.git` | `feature/official-hubs-01` |
 | system | 叶子仓 | `git@atomgit.com:openairymax/system.git` | `feature/official-hubs-01` |
 | cloudnative | 叶子仓 | `git@atomgit.com:openairymax/cloudnative.git` | `feature/official-hubs-01` |
-| airymaxos-tests | 叶子仓 | `git@atomgit.com:openairymax/airymaxos-tests.git` | `feature/official-hubs-01` |
+| tests-linux | 叶子仓 | `git@atomgit.com:openairymax/tests-linux.git` | `feature/official-hubs-01` |
 | sdk-python | 叶子仓 | `git@atomgit.com:openairymax/sdk-python.git` | `feature/official-hubs-01` |
 | sdk-go | 叶子仓 | `git@atomgit.com:openairymax/sdk-go.git` | `feature/official-hubs-01` |
 | sdk-rust | 叶子仓 | `git@atomgit.com:openairymax/sdk-rust.git` | `feature/official-hubs-01` |
@@ -167,7 +167,7 @@ SpharxWorks/.git/modules/OpenAirymax/                 # 伞仓 git 数据（Open
 │       ├── services/
 │       ├── system/
 │       ├── cloudnative/
-│       └── airymaxos-tests/
+│       └── tests-linux/
 ├── sdk/                                              # sdk 管理仓 git 数据
 │   └── modules/                                      # sdk 的 6 个叶子仓 git 数据
 │       ├── sdk-python/ ... sdk-rust/ ... cli/ ... tui/
