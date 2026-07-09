@@ -277,11 +277,11 @@ cd ../AgentRT-build && ctest -R benchmark
 
 | 类型 | 位置 | 说明 |
 |------|------|------|
-| 架构文档 | `Docs/Capital_Architecture/architecture.md` | 系统整体架构设计 |
-| API 参考 | `Docs/Capital_API/api-reference.md` | 接口规范说明 |
-| 快速入门 | `Docs/Capital_Guides/AgentRT_quickstart.md` | 新手入门指南 |
-| CLI 参考 | `Docs/Capital_API/cli-reference.md` | 命令行工具使用说明 |
-| 部署指南 | `Docs/Capital_Guides/AgentRT_deployment.md` | 部署与运维文档 |
+| 架构文档 | `Docs/10-architecture/01-system-architecture.md` | 系统整体架构设计 |
+| API 参考 | `Docs/30-api/02-api-reference.md` | 接口规范说明 |
+| 快速入门 | `Docs/60-guides/AgentRT_quickstart.md` | 新手入门指南 |
+| CLI 参考 | `Docs/30-api/03-cli-reference.md` | 命令行工具使用说明 |
+| 部署指南 | `Docs/60-guides/AgentRT_deployment.md` | 部署与运维文档 |
 | 模块 README | 各模块目录下 | 模块级说明文档 |
 
 ---
