@@ -527,7 +527,7 @@ AgentRT 首个正式发行版。经过多轮深度代码审计、版本统一、
 - **新增**: 支持渠道文档（社区支持、商业支持、联系方式）
 - **优化**: DOCSINDEX.md 路径标准化，移除错误目录层级
 - **优化**: agentos/manuals/README.md 链接一致性修复
-- **优化**: TERMINOLOGY.md 架构原则引用更新
+- **优化**: 10-terminology.md 架构原则引用更新
 
 #### Manager 模块
 
@@ -540,7 +540,7 @@ AgentRT 首个正式发行版。经过多轮深度代码审计、版本统一、
 
 #### 文档一致性
 
-- **修复**: ARCHITECTURAL_PRINCIPLES.md 版本历史表与版本信息表同步
+- **修复**: 00-architectural-principles.md 版本历史表与版本信息表同步
 - **修复**: DOCSINDEX.md 五维原则表格描述更新
 - **修复**: 所有文档中"folder/"错误路径引用
 - **统一**: 术语使用（如"工程两论"、"双系统协同"等）

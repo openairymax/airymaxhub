@@ -154,7 +154,7 @@ cargo audit
 go list -m all | nancy sleuth
 ```
 
-- ✅ 遵循 [安全编码规范](./docs/Capital_Specifications/)
+- ✅ 遵循 [安全编码规范](./docs/50-specifications/)
 - ✅ 启用编译器安全选项（`-fstack-protector`, `-D_FORTIFY_SOURCE=2`）
 - ✅ 使用静态分析工具（clang-tidy, cppcheck）
 - ✅ 进行代码审查和安全审计
@@ -364,10 +364,10 @@ AgentRT 采用**内生安全设计**理念，实现四重防护：
 ## 相关文档
 
 - [cupolas 安全穹顶文档](./agentrt/cupolas/README.md)
-- [安全编码规范](./docs/Capital_Specifications/)
+- [安全编码规范](./docs/50-specifications/)
 - [权限配置指南](./ecosystem/manager/security/policy.yaml)
-- [审计日志规范](./docs/Capital_Specifications/)
-- [ARCHITECTURAL_PRINCIPLES.md](./docs/ARCHITECTURAL_PRINCIPLES.md) - 工程观章节
+- [审计日志规范](./docs/50-specifications/)
+- [00-architectural-principles.md](./docs/00-architectural-principles.md) - 工程观章节
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - 安全相关贡献规范
 - [CHANGELOG.md](./CHANGELOG.md) - 安全更新记录
 

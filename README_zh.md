@@ -45,7 +45,7 @@ Powered by OpenAirymax
 
 ⚡️
 
-**基石理论** **[《体系并行论》](https://atomgit.com/openairymax/docs/blob/main/Basic_Theories/CN_01_%E4%BD%93%E7%B3%BB%E5%B9%B6%E8%A1%8C%E8%AE%BA.md)**
+**基石理论** **[《体系并行论》](https://atomgit.com/openairymax/docs/blob/main/00-basic-theories/CN_01_%E4%BD%93%E7%B3%BB%E5%B9%B6%E8%A1%8C%E8%AE%BA.md)**
 
 </div>
 
@@ -91,7 +91,7 @@ Powered by OpenAirymax
 ```
 
 **4.2  设计原则**
-基于 [ARCHITECTURAL_PRINCIPLES](https://atomgit.com/openairymax/docs/blob/main/ARCHITECTURAL_PRINCIPLES.md) 构建：
+基于 [ARCHITECTURAL_PRINCIPLES](https://atomgit.com/openairymax/docs/blob/main/00-architectural-principles.md) 构建：
 
 - 系统观：实时响应 <10ms
       反馈闭环，层次分解
@@ -160,7 +160,7 @@ docker run -d --name agentrt -p 8080:8080 -v ./config:/app/config agentrt:latest
 
 | 文档                                          | 核心内容                 |
 | :------------------------------------------ | :------------------- |
-| [📘 架构原则](https://atomgit.com/openairymax/docs/blob/main/ARCHITECTURAL_PRINCIPLES.md) | 五维正交体系，24 条核心原则      |
+| [📘 架构原则](https://atomgit.com/openairymax/docs/blob/main/00-architectural-principles.md) | 五维正交体系，24 条核心原则      |
 | [🚀 快速开始](https://atomgit.com/openairymax/docs/blob/main/QUICK_START.md)        | 5 分钟上手指南             |
 | [⚙️ 编译指南](https://atomgit.com/openairymax/docs/blob/main/BUILD_GUIDE.md)             | 详细构建步骤和选项            |
 | [🧪 测试指南](https://atomgit.com/openairymax/docs/blob/main/TESTING_GUIDE.md)           | 单元/集成/契约测试           |
@@ -226,7 +226,7 @@ AgentRT 是操作系统级产品，而非单一框架：
 | 系统开发者 | C/C++, 操作系统基础 | 1-2 周深入 |
 | 架构师   | 微核心，分布式系统     | 1 月精通   |
 
-推荐路径：[快速开始](https://atomgit.com/openairymax/docs/blob/main/QUICK_START.md) → [架构原则](https://atomgit.com/openairymax/docs/blob/main/ARCHITECTURAL_PRINCIPLES.md) → [CoreLoopThree](https://atomgit.com/openairymax/agentos/blob/main/agentrt/atoms/coreloopthree/README.md)
+推荐路径：[快速开始](https://atomgit.com/openairymax/docs/blob/main/QUICK_START.md) → [架构原则](https://atomgit.com/openairymax/docs/blob/main/00-architectural-principles.md) → [CoreLoopThree](https://atomgit.com/openairymax/agentos/blob/main/agentrt/atoms/coreloopthree/README.md)
 
 </details>
 
