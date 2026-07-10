@@ -1,0 +1,32 @@
+[submodule "agentrt"]
+	path = agentrt
+	url = git@atomgit.com:openairymax/agentos.git
+	branch = main
+[submodule "agentrt-linux"]
+	path = agentrt-linux
+	url = git@atomgit.com:openairymax/agentrt-linux.git
+	branch = main
+[submodule "sdk"]
+	path = sdk
+	url = git@atomgit.com:openairymax/sdk.git
+	branch = main
+[submodule "ecosystem"]
+	path = ecosystem
+	url = git@atomgit.com:openairymax/ecosystem.git
+	branch = main
+[submodule "products"]
+	path = products
+	url = git@atomgit.com:openairymax/products.git
+	branch = main
+[submodule "docs"]
+	path = docs
+	url = git@atomgit.com:openairymax/docs.git
+	branch = main
+[submodule "docs-closed"]
+	path = docs-closed
+	url = git@atomgit.com:openairymax/docs-closed.git
+	branch = main
+[submodule "devtools"]
+	path = devtools
+	url = git@atomgit.com:openairymax/devtools.git
+	branch = main

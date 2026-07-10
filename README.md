@@ -1,46 +1,40 @@
-# Airymax 极境  
+# Airymax 极境  
 
 > AI Agent Runtime Platform Engineering  
 
-OpenAirymax 开源极境，是一个专注于**智能体工程**的开源组织，开源极境开放两个项目：  
+OpenAirymax 开源极境，是一个专注于**智能体工程**的开源组织，开源极境开放两个项目：  
 
-- Airymax AgentRT 极境智能体运行底座平台工程  
-- Airymax AgentOS 极境智能体操作系统  
+- Airymax AgentRT 极境智能体运行底座平台工程  
+- Airymax AgentOS 极境智能体操作系统  
 
 ## 项目结构
 
 ```
-airymaxhub/                       # 伞仓（本仓库）
-├── cmake/                        # 伞仓直属模块
-├── agentrt/                      # 管理仓（AirymaxRT 核心运行底座）
-├── agentrt-linux/                # 管理仓（AirymaxOS 操作系统 Linux内核）
-├── agentrt-sel4/                 # 管理仓（AirymaxOS 操作系统 seL4内核）   
-├── sdk/                          # 管理仓（多语言 SDK）
-├── ecosystem/                    # 管理仓（工程生态系统）
-├── products/                     # 管理仓（面向用户制品）
-├── devtools/                     # 顶层仓（开发工具与配置中心）
-├── docs/                         # 顶层仓（开放文档中心）
-└── other/                        # 顶层仓（其他闭源项目）
+airymaxhub/           # 伞仓
+├── cmake/            # 伞仓直属 CMake 模块
+├── agentrt/          # 管理仓：AirymaxRT 核心运行底座
+├── agentrt-linux/    # 管理仓：AirymaxOS 操作系统 Linux 发行版
+├── sdk/              # 管理仓：多语言 SDK
+├── ecosystem/        # 管理仓：工程生态系统
+├── products/         # 管理仓：面向用户制品
+├── devtools/         # 顶层仓：开发工具与配置中心
+├── docs/             # 顶层仓：开放文档中心
+└── docs-closed/      # 顶层仓：闭源管理文档
 ```
 
-## 仓库组织
+## 仓库组织  
 
-OpenAirymax 采用 **38 仓拆分方案**：
+OpenAirymax 采用 **多仓层级组织方案**：
 
-- **1 个伞仓**：`airymaxhub`（本仓库）
-- **5 个管理仓**：`agentrt`、`sdk`、`ecosystem`、`products`、`agentrt-linux`（各自管理叶子仓 submodule）
-- **29 个叶子仓**：分布在 5 个管理仓下（agentrt 7 + sdk 6 + ecosystem 5 + products 3 + agentrt-linux 8）
-- **3 个顶层仓**：`devtools`、`docs`、`其他闭源`
-
-除 `memoryrovol` 归属 `spharx` 组织外，其余 37 个仓库均归属 `openairymax` 组织。
+- **伞仓 1 个**：`airymaxhub`（本仓库）
+- **管理仓 5 个**：`agentrt`、`sdk`、`ecosystem`、`products`、`agentrt-linux`（各自管理叶子仓 submodule）
+- **叶子仓 29 个**：分布在 5 个管理仓下（agentrt 7 + sdk 6 + ecosystem 5 + products 3 + agentrt-linux 8）
+- **顶层仓 3 个**：`devtools`、`docs`、`docs-closed`
 
 > 完整的子模块结构、URL 约定与分支策略详见 [REPOSITORIES.md](REPOSITORIES.md)。
 
 ## 许可证
 
-- 开源: AGPL-3.0-or-later OR Apache-2.0
-- Copyright (c) 2025-2026 SPHARX Ltd. All Rights Reserved.
+本项目所有子仓采用 **AGPL v3 + Apache 2.0** 双许可证（SPDX: `AGPL-3.0-or-later OR Apache-2.0`），可任选其一使用。各叶子仓根目录均有 LICENSE 文件。
 
-SPDX-License-Identifier: AGPL-3.0-or-later OR Apache-2.0
-
-详见 [LICENSE](LICENSE) 和 [NOTICE](NOTICE)。
+Copyright (c) 2025-2026 SPHARX Ltd. All Rights Reserved.
