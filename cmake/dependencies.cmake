@@ -6,7 +6,7 @@
 #
 # 设计目标：
 #   集中管理所有可选/必需的系统依赖查找逻辑，统一通过 pkg-config 或
-#   find_package 查找，并设置对应的 AGENTRT_HAS_* 编译宏。避免在子模块
+#   find_package 查找，并设置对应的 AIRY_HAS_* 编译宏。避免在子模块
 #   CMakeLists.txt 中重复 find_package / pkg_check_modules 调用。
 #
 #   查找的依赖：
@@ -17,17 +17,17 @@
 # 使用方式（在 CMakeLists.txt 中）:
 #   list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 #   include(dependencies)
-#   agentrt_find_required_deps()
-#   agentrt_find_optional_deps()
+#   airy_find_required_deps()
+#   airy_find_optional_deps()
 # =============================================================================
 
 include_guard(GLOBAL)
 
 # =============================================================================
-# agentrt_find_required_deps — 查找必需依赖
+# airy_find_required_deps — 查找必需依赖
 # 当前仅 Threads（Windows 使用内置线程支持）
 # =============================================================================
-function(agentrt_find_required_deps)
+function(airy_find_required_deps)
     if(WIN32)
         message(STATUS "Using Windows built-in thread support")
     else()
@@ -37,10 +37,10 @@ function(agentrt_find_required_deps)
 endfunction()
 
 # =============================================================================
-# agentrt_find_optional_deps — 查找可选依赖
-# 每个依赖设置对应的 AGENTRT_HAS_* 宏，未找到时仅警告不终止
+# airy_find_optional_deps — 查找可选依赖
+# 每个依赖设置对应的 AIRY_HAS_* 宏，未找到时仅警告不终止
 # =============================================================================
-function(agentrt_find_optional_deps)
+function(airy_find_optional_deps)
     # PkgConfig 是其他 pkg_check_modules 的前置
     find_package(PkgConfig QUIET)
     if(NOT PkgConfig_FOUND)
@@ -53,7 +53,7 @@ function(agentrt_find_optional_deps)
         pkg_check_modules(SQLITE3 QUIET sqlite3)
     endif()
     if(SQLite3_FOUND OR SQLITE3_FOUND)
-        add_compile_definitions(AGENTRT_HAS_SQLITE3=1)
+        add_compile_definitions(AIRY_HAS_SQLITE3=1)
         message(STATUS "SQLite3 found: ${SQLite3_VERSION}")
     else()
         message(WARNING "SQLite3 not found, storage features may be limited")
@@ -65,7 +65,7 @@ function(agentrt_find_optional_deps)
         pkg_check_modules(CJSON QUIET libcjson)
     endif()
     if(cJSON_FOUND OR CJSON_FOUND)
-        add_compile_definitions(AGENTRT_HAS_CJSON=1)
+        add_compile_definitions(AIRY_HAS_CJSON=1)
         message(STATUS "cJSON found: ${cJSON_VERSION}")
     else()
         message(WARNING "cJSON not found, JSON features may be limited")
@@ -79,7 +79,7 @@ function(agentrt_find_optional_deps)
         endif()
     endif()
     if(YAML_FOUND)
-        add_compile_definitions(AGENTRT_HAS_YAML=1)
+        add_compile_definitions(AIRY_HAS_YAML=1)
         message(STATUS "libyaml found: ${YAML_VERSION}")
     else()
         message(WARNING "libyaml not found, YAML features may be limited")
@@ -88,7 +88,7 @@ function(agentrt_find_optional_deps)
     # ---- OpenSSL ----
     find_package(OpenSSL QUIET)
     if(OpenSSL_FOUND)
-        add_compile_definitions(AGENTRT_HAS_OPENSSL=1)
+        add_compile_definitions(AIRY_HAS_OPENSSL=1)
         message(STATUS "OpenSSL found: ${OPENSSL_VERSION}")
     else()
         message(WARNING "OpenSSL not found, TLS features may be limited")
@@ -100,7 +100,7 @@ function(agentrt_find_optional_deps)
         pkg_check_modules(LIBCURL QUIET libcurl)
     endif()
     if(CURL_FOUND OR LIBCURL_FOUND)
-        add_compile_definitions(AGENTRT_HAS_CURL=1)
+        add_compile_definitions(AIRY_HAS_CURL=1)
         message(STATUS "libcurl found: ${CURL_VERSION}${LIBCURL_VERSION}")
     else()
         message(WARNING "libcurl not found, network features may be limited")
@@ -112,7 +112,7 @@ function(agentrt_find_optional_deps)
         pkg_check_modules(MICROHTTPD QUIET libmicrohttpd)
     endif()
     if(libmicrohttpd_FOUND OR MICROHTTPD_FOUND)
-        add_compile_definitions(AGENTRT_HAS_MICROHTTPD=1)
+        add_compile_definitions(AIRY_HAS_MICROHTTPD=1)
         message(STATUS "libmicrohttpd found")
     else()
         message(WARNING "libmicrohttpd not found, embedded HTTP server features disabled")
@@ -124,7 +124,7 @@ function(agentrt_find_optional_deps)
         pkg_check_modules(LIBWEBSOCKETS QUIET libwebsockets)
     endif()
     if(libwebsockets_FOUND OR LIBWEBSOCKETS_FOUND)
-        add_compile_definitions(AGENTRT_HAS_LIBWEBSOCKETS=1)
+        add_compile_definitions(AIRY_HAS_LIBWEBSOCKETS=1)
         message(STATUS "libwebsockets found")
     else()
         message(WARNING "libwebsockets not found, WebSocket features disabled")
@@ -136,7 +136,7 @@ function(agentrt_find_optional_deps)
         pkg_check_modules(LIBEVENT QUIET libevent)
     endif()
     if(libevent_FOUND OR LIBEVENT_FOUND)
-        add_compile_definitions(AGENTRT_HAS_LIBEVENT=1)
+        add_compile_definitions(AIRY_HAS_LIBEVENT=1)
         message(STATUS "libevent found")
     else()
         message(WARNING "libevent not found, event loop features may use internal implementation")
@@ -146,7 +146,7 @@ function(agentrt_find_optional_deps)
     if(PkgConfig_FOUND)
         pkg_check_modules(FAISS QUIET faiss)
         if(FAISS_FOUND)
-            add_compile_definitions(AGENTRT_HAS_FAISS=1)
+            add_compile_definitions(AIRY_HAS_FAISS=1)
             message(STATUS "FAISS found: ${FAISS_VERSION}")
         else()
             message(WARNING "FAISS not found, some vector search features may be limited")
@@ -155,18 +155,18 @@ function(agentrt_find_optional_deps)
 endfunction()
 
 # =============================================================================
-# agentrt_find_all_deps — 一键查找所有依赖
+# airy_find_all_deps — 一键查找所有依赖
 # 推荐在顶级 CMakeLists.txt 中调用
 # =============================================================================
-function(agentrt_find_all_deps)
-    agentrt_find_required_deps()
-    agentrt_find_optional_deps()
+function(airy_find_all_deps)
+    airy_find_required_deps()
+    airy_find_optional_deps()
 endfunction()
 
 # =============================================================================
-# agentrt_print_deps_summary — 打印依赖查找结果摘要
+# airy_print_deps_summary — 打印依赖查找结果摘要
 # =============================================================================
-function(agentrt_print_deps_summary)
+function(airy_print_deps_summary)
     message(STATUS "=========================================")
     message(STATUS "  Airymax Dependencies Summary")
     message(STATUS "=========================================")

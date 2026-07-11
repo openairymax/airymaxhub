@@ -15,49 +15,49 @@
 # 使用方式（在 CMakeLists.txt 中）:
 #   list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 #   include(platform)
-#   agentrt_detect_platform()
+#   airy_detect_platform()
 # =============================================================================
 
 include_guard(GLOBAL)
 
 # =============================================================================
-# agentrt_detect_platform — 检测平台并设置特性宏
+# airy_detect_platform — 检测平台并设置特性宏
 # 设置以下变量（PARENT_SCOPE）:
-#   AGENTRT_PLATFORM_LINUX / AGENTRT_PLATFORM_MACOS / AGENTRT_PLATFORM_WINDOWS
-#   AGENTRT_COMPILER_GCC / AGENTRT_COMPILER_CLANG / AGENTRT_COMPILER_MSVC
-#   AGENTRT_PLATFORM_NAME — 人类可读的平台名
+#   AIRY_PLATFORM_LINUX / AIRY_PLATFORM_MACOS / AIRY_PLATFORM_WINDOWS
+#   AIRY_COMPILER_GCC / AIRY_COMPILER_CLANG / AIRY_COMPILER_MSVC
+#   AIRY_PLATFORM_NAME — 人类可读的平台名
 # 同时调用 add_compile_definitions 设置 POSIX 特性宏
 # =============================================================================
-function(agentrt_detect_platform)
+function(airy_detect_platform)
     # ---- 平台检测 ----
-    set(AGENTRT_PLATFORM_LINUX OFF PARENT_SCOPE)
-    set(AGENTRT_PLATFORM_MACOS OFF PARENT_SCOPE)
-    set(AGENTRT_PLATFORM_WINDOWS OFF PARENT_SCOPE)
+    set(AIRY_PLATFORM_LINUX OFF PARENT_SCOPE)
+    set(AIRY_PLATFORM_MACOS OFF PARENT_SCOPE)
+    set(AIRY_PLATFORM_WINDOWS OFF PARENT_SCOPE)
 
     if(UNIX AND NOT APPLE)
-        set(AGENTRT_PLATFORM_LINUX ON PARENT_SCOPE)
-        set(AGENTRT_PLATFORM_NAME "Linux" PARENT_SCOPE)
+        set(AIRY_PLATFORM_LINUX ON PARENT_SCOPE)
+        set(AIRY_PLATFORM_NAME "Linux" PARENT_SCOPE)
     elseif(APPLE)
-        set(AGENTRT_PLATFORM_MACOS ON PARENT_SCOPE)
-        set(AGENTRT_PLATFORM_NAME "macOS" PARENT_SCOPE)
+        set(AIRY_PLATFORM_MACOS ON PARENT_SCOPE)
+        set(AIRY_PLATFORM_NAME "macOS" PARENT_SCOPE)
     elseif(WIN32)
-        set(AGENTRT_PLATFORM_WINDOWS ON PARENT_SCOPE)
-        set(AGENTRT_PLATFORM_NAME "Windows" PARENT_SCOPE)
+        set(AIRY_PLATFORM_WINDOWS ON PARENT_SCOPE)
+        set(AIRY_PLATFORM_NAME "Windows" PARENT_SCOPE)
     else()
-        set(AGENTRT_PLATFORM_NAME "Unknown" PARENT_SCOPE)
+        set(AIRY_PLATFORM_NAME "Unknown" PARENT_SCOPE)
     endif()
 
     # ---- 编译器检测 ----
-    set(AGENTRT_COMPILER_GCC OFF PARENT_SCOPE)
-    set(AGENTRT_COMPILER_CLANG OFF PARENT_SCOPE)
-    set(AGENTRT_COMPILER_MSVC OFF PARENT_SCOPE)
+    set(AIRY_COMPILER_GCC OFF PARENT_SCOPE)
+    set(AIRY_COMPILER_CLANG OFF PARENT_SCOPE)
+    set(AIRY_COMPILER_MSVC OFF PARENT_SCOPE)
 
     if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-        set(AGENTRT_COMPILER_GCC ON PARENT_SCOPE)
+        set(AIRY_COMPILER_GCC ON PARENT_SCOPE)
     elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
-        set(AGENTRT_COMPILER_CLANG ON PARENT_SCOPE)
+        set(AIRY_COMPILER_CLANG ON PARENT_SCOPE)
     elseif(MSVC)
-        set(AGENTRT_COMPILER_MSVC ON PARENT_SCOPE)
+        set(AIRY_COMPILER_MSVC ON PARENT_SCOPE)
     endif()
 
     # ---- POSIX 特性测试宏 ----
@@ -79,20 +79,20 @@ function(agentrt_detect_platform)
 endfunction()
 
 # =============================================================================
-# agentrt_print_platform_info — 打印平台信息摘要
+# airy_print_platform_info — 打印平台信息摘要
 # =============================================================================
-function(agentrt_print_platform_info)
+function(airy_print_platform_info)
     message(STATUS "=========================================")
     message(STATUS "  Airymax Platform Detection Summary")
     message(STATUS "=========================================")
     message(STATUS "Platform:      ${CMAKE_SYSTEM_NAME} (${CMAKE_SYSTEM_PROCESSOR})")
-    message(STATUS "Platform flag: ${AGENTRT_PLATFORM_NAME}")
+    message(STATUS "Platform flag: ${AIRY_PLATFORM_NAME}")
     message(STATUS "Compiler:      ${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}")
-    if(AGENTRT_COMPILER_GCC)
+    if(AIRY_COMPILER_GCC)
         message(STATUS "Compiler flag: GCC")
-    elseif(AGENTRT_COMPILER_CLANG)
+    elseif(AIRY_COMPILER_CLANG)
         message(STATUS "Compiler flag: Clang")
-    elseif(AGENTRT_COMPILER_MSVC)
+    elseif(AIRY_COMPILER_MSVC)
         message(STATUS "Compiler flag: MSVC")
     endif()
     message(STATUS "Build type:    ${CMAKE_BUILD_TYPE}")
@@ -100,11 +100,11 @@ function(agentrt_print_platform_info)
 endfunction()
 
 # =============================================================================
-# agentrt_is_unix_like — 检查是否为 Unix-like 系统（Linux/macOS/BSD）
+# airy_is_unix_like — 检查是否为 Unix-like 系统（Linux/macOS/BSD）
 # 参数:
 #   result_var — 输出变量名，设置为 ON 或 OFF
 # =============================================================================
-function(agentrt_is_unix_like result_var)
+function(airy_is_unix_like result_var)
     if(UNIX)
         set(${result_var} ON PARENT_SCOPE)
     else()
@@ -113,11 +113,11 @@ function(agentrt_is_unix_like result_var)
 endfunction()
 
 # =============================================================================
-# agentrt_supports_sanitizers — 检查当前编译器是否支持 sanitizers
+# airy_supports_sanitizers — 检查当前编译器是否支持 sanitizers
 # 参数:
 #   result_var — 输出变量名，设置为 ON 或 OFF
 # =============================================================================
-function(agentrt_supports_sanitizers result_var)
+function(airy_supports_sanitizers result_var)
     if(MSVC)
         set(${result_var} OFF PARENT_SCOPE)
     elseif(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
