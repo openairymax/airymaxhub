@@ -15,7 +15,7 @@
 # 使用方式（在 CMakeLists.txt 中）:
 #   list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 #   include(sanitizers)
-#   enable_agentrt_sanitizers(TARGET my_target SCOPE PRIVATE)
+#   enable_airy_sanitizers(TARGET my_target SCOPE PRIVATE)
 # =============================================================================
 
 include_guard(GLOBAL)
@@ -23,37 +23,37 @@ include_guard(GLOBAL)
 # =============================================================================
 # 顶层选项定义（供 cmake -D 覆盖）
 # =============================================================================
-option(AGENTRT_ENABLE_ASAN  "Enable AddressSanitizer + LeakSanitizer" ON)
-option(AGENTRT_ENABLE_UBSAN "Enable UndefinedBehaviorSanitizer" ON)
-option(AGENTRT_ENABLE_TSAN  "Enable ThreadSanitizer (disables ASan/LSan)" OFF)
-option(AGENTRT_ENABLE_STACK_PROTECTOR "Enable -fstack-protector-strong" ON)
-option(AGENTRT_ENABLE_FORTIFY "Enable _FORTIFY_SOURCE=2" ON)
+option(AIRY_ENABLE_ASAN  "Enable AddressSanitizer + LeakSanitizer" ON)
+option(AIRY_ENABLE_UBSAN "Enable UndefinedBehaviorSanitizer" ON)
+option(AIRY_ENABLE_TSAN  "Enable ThreadSanitizer (disables ASan/LSan)" OFF)
+option(AIRY_ENABLE_STACK_PROTECTOR "Enable -fstack-protector-strong" ON)
+option(AIRY_ENABLE_FORTIFY "Enable _FORTIFY_SOURCE=2" ON)
 
 # 兼容旧版选项名（过渡期，v1.0.1 后移除）
-if(DEFINED ENABLE_SANITIZERS AND NOT DEFINED AGENTRT_ENABLE_ASAN)
-    set(AGENTRT_ENABLE_ASAN ${ENABLE_SANITIZERS})
+if(DEFINED ENABLE_SANITIZERS AND NOT DEFINED AIRY_ENABLE_ASAN)
+    set(AIRY_ENABLE_ASAN ${ENABLE_SANITIZERS})
 endif()
 if(DEFINED ENABLE_TSAN)
-    set(AGENTRT_ENABLE_TSAN ${ENABLE_TSAN})
+    set(AIRY_ENABLE_TSAN ${ENABLE_TSAN})
 endif()
 
 # =============================================================================
 # 平台检查
 # =============================================================================
-function(agentrt_check_sanitizer_support)
+function(airy_check_sanitizer_support)
     if(MSVC)
         message(WARNING "Sanitizers are not supported on MSVC. Disabling all sanitizers.")
-        set(AGENTRT_ENABLE_ASAN OFF PARENT_SCOPE)
-        set(AGENTRT_ENABLE_UBSAN OFF PARENT_SCOPE)
-        set(AGENTRT_ENABLE_TSAN OFF PARENT_SCOPE)
+        set(AIRY_ENABLE_ASAN OFF PARENT_SCOPE)
+        set(AIRY_ENABLE_UBSAN OFF PARENT_SCOPE)
+        set(AIRY_ENABLE_TSAN OFF PARENT_SCOPE)
         return()
     endif()
 
     if(NOT CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
         message(WARNING "Sanitizers require GCC or Clang. Found: ${CMAKE_C_COMPILER_ID}")
-        set(AGENTRT_ENABLE_ASAN OFF PARENT_SCOPE)
-        set(AGENTRT_ENABLE_UBSAN OFF PARENT_SCOPE)
-        set(AGENTRT_ENABLE_TSAN OFF PARENT_SCOPE)
+        set(AIRY_ENABLE_ASAN OFF PARENT_SCOPE)
+        set(AIRY_ENABLE_UBSAN OFF PARENT_SCOPE)
+        set(AIRY_ENABLE_TSAN OFF PARENT_SCOPE)
         return()
     endif()
 endfunction()
@@ -61,8 +61,8 @@ endfunction()
 # =============================================================================
 # AddressSanitizer + LeakSanitizer (SEC-05)
 # =============================================================================
-function(agentrt_enable_asan target scope)
-    if(NOT AGENTRT_ENABLE_ASAN)
+function(airy_enable_asan target scope)
+    if(NOT AIRY_ENABLE_ASAN)
         return()
     endif()
 
@@ -95,8 +95,8 @@ endfunction()
 # =============================================================================
 # UndefinedBehaviorSanitizer (SEC-09)
 # =============================================================================
-function(agentrt_enable_ubsan target scope)
-    if(NOT AGENTRT_ENABLE_UBSAN)
+function(airy_enable_ubsan target scope)
+    if(NOT AIRY_ENABLE_UBSAN)
         return()
     endif()
 
@@ -125,8 +125,8 @@ endfunction()
 # ThreadSanitizer (SEC-08)
 # 注意：TSan 不能与 ASan 同时使用，需要独立编译
 # =============================================================================
-function(agentrt_enable_tsan target scope)
-    if(NOT AGENTRT_ENABLE_TSAN)
+function(airy_enable_tsan target scope)
+    if(NOT AIRY_ENABLE_TSAN)
         return()
     endif()
 
@@ -150,8 +150,8 @@ endfunction()
 # =============================================================================
 # 栈保护 (SEC-12 — INF-05 合规)
 # =============================================================================
-function(agentrt_enable_stack_protector target scope)
-    if(NOT AGENTRT_ENABLE_STACK_PROTECTOR OR MSVC)
+function(airy_enable_stack_protector target scope)
+    if(NOT AIRY_ENABLE_STACK_PROTECTOR OR MSVC)
         return()
     endif()
 
@@ -166,8 +166,8 @@ endfunction()
 # =============================================================================
 # FORTIFY_SOURCE 编译时缓冲区溢出检测
 # =============================================================================
-function(agentrt_enable_fortify target scope)
-    if(NOT AGENTRT_ENABLE_FORTIFY OR MSVC)
+function(airy_enable_fortify target scope)
+    if(NOT AIRY_ENABLE_FORTIFY OR MSVC)
         return()
     endif()
 
@@ -188,65 +188,65 @@ endfunction()
 # =============================================================================
 # 一键启用所有安全检测（推荐在顶级 CMakeLists.txt 调用）
 # =============================================================================
-function(enable_agentrt_sanitizers target)
+function(enable_airy_sanitizers target)
     # 可选参数: scope 默认为 PRIVATE
     set(_scope "PRIVATE")
     if(ARGC GREATER 1)
         set(_scope "${ARGV1}")
     endif()
 
-    agentrt_check_sanitizer_support()
+    airy_check_sanitizer_support()
 
     # 将结果传回父作用域
-    set(AGENTRT_ENABLE_ASAN ${AGENTRT_ENABLE_ASAN} PARENT_SCOPE)
-    set(AGENTRT_ENABLE_UBSAN ${AGENTRT_ENABLE_UBSAN} PARENT_SCOPE)
-    set(AGENTRT_ENABLE_TSAN ${AGENTRT_ENABLE_TSAN} PARENT_SCOPE)
+    set(AIRY_ENABLE_ASAN ${AIRY_ENABLE_ASAN} PARENT_SCOPE)
+    set(AIRY_ENABLE_UBSAN ${AIRY_ENABLE_UBSAN} PARENT_SCOPE)
+    set(AIRY_ENABLE_TSAN ${AIRY_ENABLE_TSAN} PARENT_SCOPE)
 
     # 安全编译基础选项（始终启用，无论 sanitizer）
-    agentrt_enable_stack_protector(${target} ${_scope})
-    agentrt_enable_fortify(${target} ${_scope})
+    airy_enable_stack_protector(${target} ${_scope})
+    airy_enable_fortify(${target} ${_scope})
 
     # TSan 与其他 sanitizer 互斥
-    if(AGENTRT_ENABLE_TSAN)
+    if(AIRY_ENABLE_TSAN)
         message(STATUS "ThreadSanitizer mode: ASan + UBSan disabled (mutual exclusion)")
-        agentrt_enable_tsan(${target} ${_scope})
+        airy_enable_tsan(${target} ${_scope})
     else()
-        if(AGENTRT_ENABLE_ASAN)
-            agentrt_enable_asan(${target} ${_scope})
+        if(AIRY_ENABLE_ASAN)
+            airy_enable_asan(${target} ${_scope})
         endif()
-        if(AGENTRT_ENABLE_UBSAN)
-            agentrt_enable_ubsan(${target} ${_scope})
+        if(AIRY_ENABLE_UBSAN)
+            airy_enable_ubsan(${target} ${_scope})
         endif()
     endif()
 
     # 输出检测矩阵
     message(STATUS "Runtime Detection Matrix for ${target}:")
-    message(STATUS "  ASan:    ${AGENTRT_ENABLE_ASAN}")
-    message(STATUS "  LSan:    ${AGENTRT_ENABLE_ASAN}  (bundled with ASan)")
-    message(STATUS "  UBSan:   ${AGENTRT_ENABLE_UBSAN}")
-    message(STATUS "  TSan:    ${AGENTRT_ENABLE_TSAN}")
-    message(STATUS "  Stack:   ${AGENTRT_ENABLE_STACK_PROTECTOR}")
-    message(STATUS "  Fortify: ${AGENTRT_ENABLE_FORTIFY}")
+    message(STATUS "  ASan:    ${AIRY_ENABLE_ASAN}")
+    message(STATUS "  LSan:    ${AIRY_ENABLE_ASAN}  (bundled with ASan)")
+    message(STATUS "  UBSan:   ${AIRY_ENABLE_UBSAN}")
+    message(STATUS "  TSan:    ${AIRY_ENABLE_TSAN}")
+    message(STATUS "  Stack:   ${AIRY_ENABLE_STACK_PROTECTOR}")
+    message(STATUS "  Fortify: ${AIRY_ENABLE_FORTIFY}")
 endfunction()
 
 # =============================================================================
 # 打印 sanitizer 配置摘要
 # =============================================================================
-function(agentrt_print_sanitizer_summary)
+function(airy_print_sanitizer_summary)
     message(STATUS "=========================================")
     message(STATUS "  Airymax Runtime Detection Configuration")
     message(STATUS "=========================================")
-    message(STATUS "AddressSanitizer (ASan):       ${AGENTRT_ENABLE_ASAN}")
-    message(STATUS "LeakSanitizer (LSan):          ${AGENTRT_ENABLE_ASAN}")
-    message(STATUS "UndefinedBehaviorSanitizer:    ${AGENTRT_ENABLE_UBSAN}")
-    message(STATUS "ThreadSanitizer (TSan):        ${AGENTRT_ENABLE_TSAN}")
-    message(STATUS "Stack Protector:               ${AGENTRT_ENABLE_STACK_PROTECTOR}")
-    message(STATUS "FORTIFY_SOURCE=2:              ${AGENTRT_ENABLE_FORTIFY}")
-    if(AGENTRT_ENABLE_ASAN)
+    message(STATUS "AddressSanitizer (ASan):       ${AIRY_ENABLE_ASAN}")
+    message(STATUS "LeakSanitizer (LSan):          ${AIRY_ENABLE_ASAN}")
+    message(STATUS "UndefinedBehaviorSanitizer:    ${AIRY_ENABLE_UBSAN}")
+    message(STATUS "ThreadSanitizer (TSan):        ${AIRY_ENABLE_TSAN}")
+    message(STATUS "Stack Protector:               ${AIRY_ENABLE_STACK_PROTECTOR}")
+    message(STATUS "FORTIFY_SOURCE=2:              ${AIRY_ENABLE_FORTIFY}")
+    if(AIRY_ENABLE_ASAN)
         message(STATUS "ASan halt_on_error:            YES (CI will fail on detection)")
         message(STATUS "LSan suppressions:             ecosystem/manager/sanitizer/lsan-suppressions")
     endif()
-    if(AGENTRT_ENABLE_TSAN)
+    if(AIRY_ENABLE_TSAN)
         message(STATUS "TSan history_size:             7")
         message(STATUS "TSan halt_on_error:            YES")
     endif()

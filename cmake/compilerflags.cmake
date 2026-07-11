@@ -12,9 +12,9 @@
 # 使用方式（在 CMakeLists.txt 中）:
 #   list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../../cmake")
 #   include(compilerflags)
-#   agentrt_apply_compiler_flags()
-#   agentrt_apply_build_type_flags()
-#   agentrt_apply_coverage()
+#   airy_apply_compiler_flags()
+#   airy_apply_build_type_flags()
+#   airy_apply_coverage()
 # =============================================================================
 
 include_guard(GLOBAL)
@@ -25,11 +25,11 @@ option(ENABLE_COVERAGE "Enable code coverage instrumentation" OFF)
 option(ENABLE_LTO "Enable Link-Time Optimization for Release builds" ON)
 
 # =============================================================================
-# agentrt_apply_compiler_flags — 应用基础安全编译选项
+# airy_apply_compiler_flags — 应用基础安全编译选项
 # 跨平台：MSVC / GCC / Clang
 # 包含：警告级别、安全选项（栈保护/FORTIFY）、链接器安全选项
 # =============================================================================
-function(agentrt_apply_compiler_flags)
+function(airy_apply_compiler_flags)
     if(MSVC)
         # MSVC 安全选项
         add_compile_options(/W4 /WX- /permissive-)  # 最高警告级别，但警告不视为错误
@@ -73,19 +73,19 @@ function(agentrt_apply_compiler_flags)
 endfunction()
 
 # =============================================================================
-# agentrt_apply_compliance_strict — 应用 SE-01 合规严格模式
+# airy_apply_compliance_strict — 应用 SE-01 合规严格模式
 # 全局注入 banned_functions.h，禁止使用被毒化的不安全函数（memcpy/strncpy 等）
 # 参数:
 #   BANNED_HEADER — banned_functions.h 的绝对路径
 # =============================================================================
-function(agentrt_apply_compliance_strict)
+function(airy_apply_compliance_strict)
     set(_options "")
     set(_one_value_args BANNED_HEADER)
     set(_multi_value_args "")
     cmake_parse_arguments(_ARG "${_options}" "${_one_value_args}" "${_multi_value_args}" ${ARGN})
 
     if(NOT _ARG_BANNED_HEADER)
-        message(FATAL_ERROR "agentrt_apply_compliance_strict requires BANNED_HEADER argument")
+        message(FATAL_ERROR "airy_apply_compliance_strict requires BANNED_HEADER argument")
     endif()
 
     if(NOT EXISTS "${_ARG_BANNED_HEADER}")
@@ -93,19 +93,19 @@ function(agentrt_apply_compliance_strict)
     endif()
 
     if(NOT MSVC)
-        add_compile_definitions(AGENTRT_COMPLIANCE_STRICT)
+        add_compile_definitions(AIRY_COMPLIANCE_STRICT)
         add_compile_options("-include" "${_ARG_BANNED_HEADER}")
         message(STATUS "SE-01 compliance strict mode enabled: ${_ARG_BANNED_HEADER}")
     endif()
 endfunction()
 
 # =============================================================================
-# agentrt_apply_build_type_flags — 应用构建类型相关的编译选项
+# airy_apply_build_type_flags — 应用构建类型相关的编译选项
 # Debug: -g -O0 -fno-inline (GCC/Clang) 或 /Zi /Ob0 /Od /RTC1 (MSVC)
 # Release: -O3 -flto -ffat-lto-objects (GCC/Clang) 或 /O2 /Ob2 /Oi /Ot /GL (MSVC)
 # RelWithDebInfo: 同 Debug 的符号选项
 # =============================================================================
-function(agentrt_apply_build_type_flags)
+function(airy_apply_build_type_flags)
     # MSVC Release 模式特殊处理：解决 /O2 与 /RTC1 冲突
     if(MSVC AND CMAKE_BUILD_TYPE STREQUAL "Release")
         string(REPLACE "/RTC1" "" CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
@@ -140,10 +140,10 @@ function(agentrt_apply_build_type_flags)
 endfunction()
 
 # =============================================================================
-# agentrt_apply_coverage — 应用代码覆盖率编译选项
+# airy_apply_coverage — 应用代码覆盖率编译选项
 # 仅支持 GCC/Clang，MSVC 需要 Visual Studio Professional
 # =============================================================================
-function(agentrt_apply_coverage)
+function(airy_apply_coverage)
     if(NOT ENABLE_COVERAGE)
         return()
     endif()
@@ -160,23 +160,23 @@ function(agentrt_apply_coverage)
 endfunction()
 
 # =============================================================================
-# agentrt_apply_all_compiler_flags — 一键应用所有编译器配置
+# airy_apply_all_compiler_flags — 一键应用所有编译器配置
 # 推荐在顶级 CMakeLists.txt 中调用
 # 参数:
 #   BANNED_HEADER — banned_functions.h 的绝对路径（可选，用于 SE-01 合规）
 # =============================================================================
-function(agentrt_apply_all_compiler_flags)
+function(airy_apply_all_compiler_flags)
     set(_options "")
     set(_one_value_args BANNED_HEADER)
     set(_multi_value_args "")
     cmake_parse_arguments(_ARG "${_options}" "${_one_value_args}" "${_multi_value_args}" ${ARGN})
 
-    agentrt_apply_compiler_flags()
+    airy_apply_compiler_flags()
 
     if(_ARG_BANNED_HEADER)
-        agentrt_apply_compliance_strict(BANNED_HEADER "${_ARG_BANNED_HEADER}")
+        airy_apply_compliance_strict(BANNED_HEADER "${_ARG_BANNED_HEADER}")
     endif()
 
-    agentrt_apply_build_type_flags()
-    agentrt_apply_coverage()
+    airy_apply_build_type_flags()
+    airy_apply_coverage()
 endfunction()

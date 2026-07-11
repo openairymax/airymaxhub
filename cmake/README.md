@@ -24,8 +24,8 @@ cmake/
 ├── dependencies.cmake           # 统一依赖查找（必需: Threads；可选: SQLite3 / cJSON / YAML / OpenSSL / CURL / 等）
 ├── sanitizers.cmake             # 运行时检测（ASan / LSan / UBSan / TSan / 栈保护 / FORTIFY_SOURCE）
 ├── utils.cmake                  # 构建期打印工具（ANSI 彩色编码：OK/INFO/WARN/ERROR/FATAL/DEBUG/SECTION）
-├── agentrt_print.cmake          # AgentRT 统一构建打印系统（兼容旧版名称，与 utils.cmake 功能一致）
-├── AgentRTConfig.cmake.in       # CMake 包配置模板（供 find_package(AgentRT) 使用）
+├── airy_print.cmake             # AgentRT 统一构建打印系统（兼容旧版名称，与 utils.cmake 功能一致）
+├── AirymaxRTConfig.cmake.in     # CMake 包配置模板（供 find_package(AirymaxRT) 使用）
 ├── ctest_wrapper.sh.in          # 测试运行包装脚本（自动设置 sanitizer 环境变量）
 └── windows_preinclude.h         # Windows MSVC 预包含头（POSIX 兼容层：__builtin_* 映射 / ssize_t / 原子操作）
 ```
@@ -40,11 +40,11 @@ cmake/
 
 | 函数 | 说明 |
 |------|------|
-| `agentrt_apply_compiler_flags()` | 应用基础安全编译选项（MSVC: /W4 /GS /guard:cf；GCC/Clang: -Wall -Wextra -fstack-protector-strong） |
-| `agentrt_apply_compliance_strict(BANNED_HEADER)` | 应用 SE-01 合规严格模式，全局注入 banned_functions.h |
-| `agentrt_apply_build_type_flags()` | 应用构建类型相关选项（Debug: -g -O0；Release: -O3 -flto） |
-| `agentrt_apply_coverage()` | 应用代码覆盖率选项（-fprofile-arcs -ftest-coverage） |
-| `agentrt_apply_all_compiler_flags(BANNED_HEADER)` | 一键应用所有编译器配置 |
+| `airy_apply_compiler_flags()` | 应用基础安全编译选项（MSVC: /W4 /GS /guard:cf；GCC/Clang: -Wall -Wextra -fstack-protector-strong） |
+| `airy_apply_compliance_strict(BANNED_HEADER)` | 应用 SE-01 合规严格模式，全局注入 banned_functions.h |
+| `airy_apply_build_type_flags()` | 应用构建类型相关选项（Debug: -g -O0；Release: -O3 -flto） |
+| `airy_apply_coverage()` | 应用代码覆盖率选项（-fprofile-arcs -ftest-coverage） |
+| `airy_apply_all_compiler_flags(BANNED_HEADER)` | 一键应用所有编译器配置 |
 
 **编译选项**:
 
@@ -62,10 +62,10 @@ cmake/
 
 | 函数 | 说明 |
 |------|------|
-| `agentrt_detect_platform()` | 检测平台并设置 `AGENTRT_PLATFORM_LINUX/MACOS/WINDOWS` 和 `AGENTRT_COMPILER_GCC/CLANG/MSVC` |
-| `agentrt_print_platform_info()` | 打印平台信息摘要 |
-| `agentrt_is_unix_like(result_var)` | 检查是否为 Unix-like 系统 |
-| `agentrt_supports_sanitizers(result_var)` | 检查当前编译器是否支持 sanitizers |
+| `airy_detect_platform()` | 检测平台并设置 `AIRY_PLATFORM_LINUX/MACOS/WINDOWS` 和 `AIRY_COMPILER_GCC/CLANG/MSVC` |
+| `airy_print_platform_info()` | 打印平台信息摘要 |
+| `airy_is_unix_like(result_var)` | 检查是否为 Unix-like 系统 |
+| `airy_supports_sanitizers(result_var)` | 检查当前编译器是否支持 sanitizers |
 
 **POSIX 特性宏**:
 
@@ -78,29 +78,29 @@ cmake/
 
 **版本**: 1.0.0 | **创建**: 2026-07-06
 
-集中管理所有可选/必需的系统依赖查找逻辑，统一通过 `pkg-config` 或 `find_package` 查找，并设置对应的 `AGENTRT_HAS_*` 编译宏。
+集中管理所有可选/必需的系统依赖查找逻辑，统一通过 `pkg-config` 或 `find_package` 查找，并设置对应的 `AIRY_HAS_*` 编译宏。
 
 | 函数 | 说明 |
 |------|------|
-| `agentrt_find_required_deps()` | 查找必需依赖（当前仅 Threads） |
-| `agentrt_find_optional_deps()` | 查找可选依赖（SQLite3 / cJSON / YAML / OpenSSL / CURL / libmicrohttpd / libwebsockets / libevent / FAISS） |
-| `agentrt_find_all_deps()` | 一键查找所有依赖 |
-| `agentrt_print_deps_summary()` | 打印依赖查找结果摘要 |
+| `airy_find_required_deps()` | 查找必需依赖（当前仅 Threads） |
+| `airy_find_optional_deps()` | 查找可选依赖（SQLite3 / cJSON / YAML / OpenSSL / CURL / libmicrohttpd / libwebsockets / libevent / FAISS） |
+| `airy_find_all_deps()` | 一键查找所有依赖 |
+| `airy_print_deps_summary()` | 打印依赖查找结果摘要 |
 
 **查找的依赖**:
 
 | 依赖 | 宏 | 用途 |
 |------|-----|------|
 | Threads | — | 多线程（必需） |
-| SQLite3 | `AGENTRT_HAS_SQLITE3` | 嵌入式数据库 |
-| cJSON | `AGENTRT_HAS_CJSON` | JSON 解析 |
-| libyaml | `AGENTRT_HAS_YAML` | YAML 配置解析 |
-| OpenSSL | `AGENTRT_HAS_OPENSSL` | TLS/加密 |
-| libcurl | `AGENTRT_HAS_CURL` | HTTP 客户端 |
-| libmicrohttpd | `AGENTRT_HAS_MICROHTTPD` | 嵌入式 HTTP 服务器 |
-| libwebsockets | `AGENTRT_HAS_LIBWEBSOCKETS` | WebSocket |
-| libevent | `AGENTRT_HAS_LIBEVENT` | 事件循环 |
-| FAISS | `AGENTRT_HAS_FAISS` | 向量检索（MemoryRovol） |
+| SQLite3 | `AIRY_HAS_SQLITE3` | 嵌入式数据库 |
+| cJSON | `AIRY_HAS_CJSON` | JSON 解析 |
+| libyaml | `AIRY_HAS_YAML` | YAML 配置解析 |
+| OpenSSL | `AIRY_HAS_OPENSSL` | TLS/加密 |
+| libcurl | `AIRY_HAS_CURL` | HTTP 客户端 |
+| libmicrohttpd | `AIRY_HAS_MICROHTTPD` | 嵌入式 HTTP 服务器 |
+| libwebsockets | `AIRY_HAS_LIBWEBSOCKETS` | WebSocket |
+| libevent | `AIRY_HAS_LIBEVENT` | 事件循环 |
+| FAISS | `AIRY_HAS_FAISS` | 向量检索（MemoryRovol） |
 
 ### 4. sanitizers.cmake — 运行时检测
 
@@ -110,24 +110,24 @@ cmake/
 
 | 函数 | 说明 |
 |------|------|
-| `agentrt_check_sanitizer_support()` | 检查平台是否支持 sanitizers |
-| `agentrt_enable_asan(target scope)` | 启用 AddressSanitizer + LeakSanitizer |
-| `agentrt_enable_ubsan(target scope)` | 启用 UndefinedBehaviorSanitizer |
-| `agentrt_enable_tsan(target scope)` | 启用 ThreadSanitizer（与 ASan 互斥） |
-| `agentrt_enable_stack_protector(target scope)` | 启用栈保护 (-fstack-protector-strong) |
-| `agentrt_enable_fortify(target scope)` | 启用 FORTIFY_SOURCE=2 |
-| `enable_agentrt_sanitizers(target [scope])` | 一键启用所有安全检测 |
-| `agentrt_print_sanitizer_summary()` | 打印 sanitizer 配置摘要 |
+| `airy_check_sanitizer_support()` | 检查平台是否支持 sanitizers |
+| `airy_enable_asan(target scope)` | 启用 AddressSanitizer + LeakSanitizer |
+| `airy_enable_ubsan(target scope)` | 启用 UndefinedBehaviorSanitizer |
+| `airy_enable_tsan(target scope)` | 启用 ThreadSanitizer（与 ASan 互斥） |
+| `airy_enable_stack_protector(target scope)` | 启用栈保护 (-fstack-protector-strong) |
+| `airy_enable_fortify(target scope)` | 启用 FORTIFY_SOURCE=2 |
+| `enable_airy_sanitizers(target [scope])` | 一键启用所有安全检测 |
+| `airy_print_sanitizer_summary()` | 打印 sanitizer 配置摘要 |
 
 **CMake 选项**:
 
 | 选项 | 默认值 | 说明 |
 |------|--------|------|
-| `AGENTRT_ENABLE_ASAN` | ON | AddressSanitizer + LeakSanitizer |
-| `AGENTRT_ENABLE_UBSAN` | ON | UndefinedBehaviorSanitizer |
-| `AGENTRT_ENABLE_TSAN` | OFF | ThreadSanitizer（与 ASan 互斥） |
-| `AGENTRT_ENABLE_STACK_PROTECTOR` | ON | 栈保护 |
-| `AGENTRT_ENABLE_FORTIFY` | ON | FORTIFY_SOURCE=2 |
+| `AIRY_ENABLE_ASAN` | ON | AddressSanitizer + LeakSanitizer |
+| `AIRY_ENABLE_UBSAN` | ON | UndefinedBehaviorSanitizer |
+| `AIRY_ENABLE_TSAN` | OFF | ThreadSanitizer（与 ASan 互斥） |
+| `AIRY_ENABLE_STACK_PROTECTOR` | ON | 栈保护 |
+| `AIRY_ENABLE_FORTIFY` | ON | FORTIFY_SOURCE=2 |
 
 ### 5. utils.cmake — 构建期打印工具
 
@@ -137,25 +137,25 @@ cmake/
 
 | 函数 | 颜色 | 用途 |
 |------|------|------|
-| `agentrt_print_ok(msg)` | 绿色 | 成功/确认 |
-| `agentrt_print_info(msg)` | 蓝色 | 信息性输出 |
-| `agentrt_print_warn(msg)` | 黄色 | 警告 |
-| `agentrt_print_error(msg)` | 红色 | 错误（不终止） |
-| `agentrt_print_fatal(msg)` | 品红 | 致命错误（终止构建） |
-| `agentrt_print_debug(msg)` | 灰色 | 调试信息 |
-| `agentrt_print_section(msg)` | 青色加粗 | 章节标题 |
-| `agentrt_print_status(msg)` | 蓝色 | 兼容旧 `message(STATUS)` |
-| `agentrt_print_verbose(msg)` | 灰色 | 条件输出（`AGENTRT_VERBOSE=1`） |
-| `agentrt_print_build_summary()` | — | 打印构建环境摘要 |
+| `airy_print_ok(msg)` | 绿色 | 成功/确认 |
+| `airy_print_info(msg)` | 蓝色 | 信息性输出 |
+| `airy_print_warn(msg)` | 黄色 | 警告 |
+| `airy_print_error(msg)` | 红色 | 错误（不终止） |
+| `airy_print_fatal(msg)` | 品红 | 致命错误（终止构建） |
+| `airy_print_debug(msg)` | 灰色 | 调试信息 |
+| `airy_print_section(msg)` | 青色加粗 | 章节标题 |
+| `airy_print_status(msg)` | 蓝色 | 兼容旧 `message(STATUS)` |
+| `airy_print_verbose(msg)` | 灰色 | 条件输出（`AIRY_VERBOSE=1`） |
+| `airy_print_build_summary()` | — | 打印构建环境摘要 |
 
 **彩色控制**:
 
 - 自动检测终端环境：管道/文件重定向时禁用彩色，避免 ANSI 码污染日志文件
-- 可通过 `AGENTRT_BUILD_COLOR=1/0` 强制启用/禁用
+- 可通过 `AIRY_BUILD_COLOR=1/0` 强制启用/禁用
 
-### 6. AgentRTConfig.cmake.in — 包配置模板
+### 6. AirymaxRTConfig.cmake.in — 包配置模板
 
-供 `find_package(AgentRT CONFIG)` 使用的 CMake 包配置模板。下游项目通过此文件获取 AgentRT 的 include 路径和版本信息。
+供 `find_package(AirymaxRT CONFIG)` 使用的 CMake 包配置模板。下游项目通过此文件获取 AirymaxRT 的 include 路径和版本信息。
 
 ### 7. ctest_wrapper.sh.in — 测试运行包装脚本
 
@@ -169,7 +169,7 @@ cmake/
 - `ssize_t` 类型定义
 - `PATH_MAX` / `strcasecmp` / `strdup` / `strtok_r` 等 POSIX 函数映射
 - 原子操作常量定义（`__ATOMIC_RELAXED` 等）
-- cJSON 桩函数（当 `AGENTRT_HAS_CJSON` 未定义时）
+- cJSON 桩函数（当 `AIRY_HAS_CJSON` 未定义时）
 
 ## 使用方式
 
@@ -187,15 +187,15 @@ include(sanitizers)
 include(utils)
 
 # 使用
-agentrt_detect_platform()
-agentrt_apply_all_compiler_flags()
-agentrt_find_all_deps()
+airy_detect_platform()
+airy_apply_all_compiler_flags()
+airy_find_all_deps()
 
 add_executable(my_target main.c)
-enable_agentrt_sanitizers(my_target PRIVATE)
+enable_airy_sanitizers(my_target PRIVATE)
 
-agentrt_print_section("Build completed")
-agentrt_print_ok("my_target built successfully")
+airy_print_section("Build completed")
+airy_print_ok("my_target built successfully")
 ```
 
 ## 上游依赖
