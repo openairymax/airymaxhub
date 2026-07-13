@@ -5,7 +5,7 @@
 OpenAirymax 开源极境，是一个专注于**智能体工程**的开源组织，开源极境开放两个项目：  
 
 - Airymax AgentRT 极境智能体运行底座平台工程  
-- Airymax AgentOS 极境智能体操作系统  
+- AirymaxOS 极境智能体操作系统  
 
 ## 项目结构
 
