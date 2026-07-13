@@ -93,7 +93,7 @@ git@atomgit.com:openairymax/<仓库名>.git
 
 | 编号 | 仓库名 | 实际 URL | 原因 |
 |------|--------|----------|------|
-| **E1** | `agentrt`（管理仓） | `git@atomgit.com:openairymax/agentos.git` | 历史保留：agentrt 管理仓的 git 远端名沿用改名前的 `agentos.git`，用户决策保持不变（内部代码前缀 `agentos_→agentrt_` 已改名，但 git remote 名保留） |
+| **E1** | `agentrt`（管理仓） | `git@atomgit.com:openairymax/agentos.git` | 历史保留：agentrt 管理仓的 git 远端名沿用改名前的 `agentos.git`，用户决策保持不变（内部代码前缀 `agentos_→agentrt_→airy_` 已完成两阶段改名，但 git remote 名保留） |
 | **E2** | `cli` / `tui`（sdk 叶子仓） | `git@atomgit.com:openairymax/cli.git` / `tui.git` | 命名约定：cli 与 tui 作为用户直接交互的独立工具，URL 不带 `sdk-` 前缀（区别于 sdk-python / sdk-go / sdk-rust / sdk-typescript 等语言绑定 SDK） |
 | **E3** | `memoryrovol`（products 叶子仓） | `git@atomgit.com:spharx/memoryrovol.git` | 组织归属：memoryrovol 归属 `spharx` 个人组织而非 `openairymax` 组织（商业隔离层，B 类语义） |
 
