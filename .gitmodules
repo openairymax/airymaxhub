@@ -1,6 +1,6 @@
 [submodule "agentrt"]
 	path = agentrt
-	url = ../agentos.git
+	url = ../agentrt.git
 	branch = main
 [submodule "agentrt-linux"]
 	path = agentrt-linux
