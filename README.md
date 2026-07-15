@@ -4,7 +4,7 @@
 
 OpenAirymax 开源极境，是一个专注于**智能体工程**的开源组织，开源极境开放两个项目：  
 
-- Airymax AgentRT 极境智能体运行底座平台工程  
+- AirymaxRT 极境智能体运行底座平台工程  
 - AirymaxOS 极境智能体操作系统  
 
 ## 项目结构
@@ -12,8 +12,8 @@ OpenAirymax 开源极境，是一个专注于**智能体工程**的开源组织�
 ```
 airymaxhub/           # 伞仓
 ├── cmake/            # 伞仓直属 CMake 模块
-├── agentrt/          # 管理仓：**AirymaxRT 核心运行底座**
-├── agentrt-linux/    # 管理仓：**AirymaxOS 操作系统 Linux 发行版**
+├── agentrt/          # 管理仓：**AirymaxRT 核心运行底座
+├── agentrt-linux/    # 管理仓：**AirymaxOS 操作系统Linux6.6发行版
 ├── sdk/              # 管理仓：多语言 SDK
 ├── ecosystem/        # 管理仓：工程生态系统
 ├── products/         # 管理仓：面向用户制品
