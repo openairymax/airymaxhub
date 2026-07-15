@@ -81,10 +81,6 @@ function(airy_enable_asan target scope)
     # 运行时环境变量（通过 CMake 属性传递给 ctest）
     # suppression 文件路径对齐 29 仓拆分后的 ecosystem/manager 仓
     set(_lsan_suppression "${CMAKE_SOURCE_DIR}/ecosystem/manager/sanitizer/lsan-suppressions")
-    if(NOT EXISTS "${_lsan_suppression}")
-        # 兼容旧路径（拆分前）
-        set(_lsan_suppression "${CMAKE_SOURCE_DIR}/agentos/manager/sanitizer/lsan-suppressions")
-    endif()
 
     set_target_properties(${target} PROPERTIES
         ASAN_OPTIONS "halt_on_error=1:detect_stack_use_after_return=1:detect_leaks=1:allocator_may_return_null=1"
