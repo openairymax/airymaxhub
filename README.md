@@ -1,42 +1,31 @@
-# Airymax 极境  
+## 组织介绍
 
-> AI Agent Runtime Platform Engineering  
+OpenAirymax 开源极境，是一个专注于智能体工程的开源组织。  
 
-OpenAirymax 开源极境，是一个专注于**智能体工程**的开源组织，开源极境开放两个项目：  
+## 项目介绍
 
-- AirymaxRT 极境智能体运行底座平台工程  
-- AirymaxOS 极境智能体操作系统  
+开源极境开放两个同源但不同层级的项目：  
+- AirymaxRT 极境智能体运行底座平台工程   
+    是一个跨平台（Linux、Windows、MacOS）的 Agent 运行底座；  
+    RT面向普通用户和普通开发者，为其提供稳定的工业级智能体运行底座。  
+- AirymaxOS 极境智能体操作系统发行版   
+    是一个基于 Linux 6.6 的智能体操作系统，专为 Agent 负载设计，提供优化的性能和稳定性；  
+    OS面向开源社区和专业开发者，构建稳定的下一代智能体原生操作系统。  
+    
+> RT用户态和OS内核态架构相同，工程标准规范相同，可组合则是 Airymax 的完全体，两个产品也可以独立运行。
 
 ## 项目结构
 
-```
-airymaxhub/           # 伞仓
-├── cmake/            # 伞仓直属 CMake 模块
-├── agentrt/          # 管理仓：AirymaxRT 核心运行底座
-├── agentrt-linux/    # 管理仓：AirymaxOS 操作系统Linux6.6发行版
-├── sdk/              # 管理仓：多语言 SDK
-├── ecosystem/        # 管理仓：工程生态系统
-├── products/         # 管理仓：面向用户制品
-├── devtools/         # 顶层仓：开发工具与配置中心
-├── docs/             # 顶层仓：开放文档中心
-└── docs-closed/      # 顶层仓：闭源管理文档
-```
+airymaxhub 伞仓：  
+- agentrt 用户态 「AirymaxRT 运行底座平台工程」  
+- agentrt-linux 内核态 「AirymaxOS 操作系统发行版」  
 
-## 仓库组织  
-
-OpenAirymax 采用 **多仓层级组织方案**：
-
-- **伞仓 1 个**：`airymaxhub`（本仓库）
-- **管理仓 5 个**：`agentrt`、`sdk`、`ecosystem`、`products`、`agentrt-linux`（各自管理叶子仓 submodule）
-- **叶子仓 29 个**：分布在 5 个管理仓下（agentrt 7 + sdk 6 + ecosystem 5 + products 3 + agentrt-linux 8）
-- **顶层仓 3 个**：`devtools`、`docs`、`docs-closed`
-
-> 完整的子模块结构、URL 约定与分支策略详见 [REPOSITORIES.md](REPOSITORIES.md)。
+> OpenAirymax 采用多仓层级组织,完整的子模块结构、URL 约定与分支策略详见 [REPOSITORIES.md](REPOSITORIES.md)。  
 
 ## 许可证
 
-本项目所有子仓采用 **AGPL v3 + Apache 2.0** 双许可证（SPDX: `AGPL-3.0-or-later OR Apache-2.0`），可任选其一使用。各叶子仓根目录均有 LICENSE 文件。  
+本项目采用 **AGPL v3 + Apache 2.0** 双许可证，各叶子仓根目录均有各自的 LICENSE 文件。  
 
-为什么叫极境？项目的发起人之一 Liren_Wang 认为，它为 Agent 提供了原生基础的运行环境，利用特殊的工程设计，可以让使用的不是最先进 LLM 的 Agent 在这套系统加持下，将能力**极尽升华** Ultimate Sublimation 到一个新的境界，实现更高级的功能和性能，达到“越级战斗”的效果。  
+> 为什么叫极境？项目的发起人之一 Liren\_Wang 认为，它为 Agent 提供了原生基础的运行环境，利用特殊的工程设计，可以让使用的不是最先进 LLM 的 Agent 在这套系统加持下，将能力**极尽升华** Ultimate Sublimation 到一个新的境界，实现更高级的功能和性能，达到“越级战斗”的效果。
 
 Copyright (c) 2025-2026 SPHARX Ltd. All Rights Reserved.
