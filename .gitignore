@@ -11,6 +11,7 @@
 !.gitignore
 !.gitmodules
 !README.md
+!README_zh.md
 !REPOSITORIES.md
 # ---------------------------------------------------------------------------
 # 伞仓直属模块（非 submodule，需完整追踪）

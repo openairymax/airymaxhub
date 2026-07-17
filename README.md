@@ -1,29 +1,37 @@
-## 组织介绍
+## About OpenAirymax
 
-OpenAirymax 开源极境，是一个专注于智能体工程的开源组织。
+OpenAirymax is an open-source organization focused on agent-native infrastructure engineering.
 
-## 项目介绍
+## What We Build
 
-OpenAirymax 开放两个同源但不同层级的项目：  
+Two co-designed projects, operating at different layers of the stack:
 
-- AirymaxRT「极境智能体运行底座平台工程」是一个跨平台（Linux、Windows、MacOS）的 Agent 运行底座，面向普通用户和普通开发者，为其提供稳定的工业级智能体运行底座。   
-- AirymaxOS「极境智能体操作系统发行版」是一个基于 Linux 6.6 / 7.1 的智能体操作系统，专为 Agent 负载设计，提供优化的性能和稳定性，面向开源社区和专业开发者，构建稳定的下一代智能体原生操作系统。    
+- **AirymaxRT** — the Agent Runtime. A cross-platform (Linux, Windows, macOS) execution base for AI agents. Built for developers and end users who need a production-grade foundation that just works.
+- **AirymaxOS** — the Agent Operating System. A Linux-based OS distro (Linux 6.6 / 7.1), purpose-built for agent workloads. Optimized scheduling, optimized I/O, no general-purpose baggage.
 
-> RT用户态和OS内核态架构相同，工程标准规范相同，可组合，则是 Airymax 的完全体，两个产品也可以独立运行。
+> Same architecture. Same engineering standards. Run them together for the full stack, or independently — both paths are first-class.
 
-## 项目结构
+## Structure
 
-airymaxhub 伞仓：
+The `airymaxhub` umbrella repo:
 
-- user mode：agentrt 「AirymaxRT 运行底座平台工程」主仓  
-- kernel mode：agentrt-linux 「AirymaxOS 操作系统发行版」主仓  
+- **user mode** → `agentrt` &nbsp; [AirymaxRT Runtime]
+- **kernel mode** → `agentrt-linux` &nbsp; [AirymaxOS Distribution]
 
-> OpenAirymax 采用多仓层级组织,完整的子模块结构、URL 约定与分支策略详见 [REPOSITORIES.md](REPOSITORIES.md)。
+> OpenAirymax uses a multi-repo architecture. For the full submodule layout, URL conventions, and branching strategy, see [REPOSITORIES.md](REPOSITORIES.md).
 
-## 许可证
+## License
 
-本项目采用 **AGPL v3 + Apache 2.0** 双许可证，各叶子仓根目录均有各自的 LICENSE 文件。  
+Dual-licensed under **AGPL v3 + Apache 2.0**. Each leaf repo carries its own LICENSE file.
 
-> 为什么叫极境？项目的发起人之一 Liren\_Wang 认为，它为 Agent 提供了原生基础的运行环境，利用特殊的工程设计，可以让使用的不是最先进 LLM 的 Agent 在这套系统加持下，将能力**极尽升华** Ultimate Sublimation 到一个新的境界，实现更高级的功能和性能，达到“越级战斗”的效果。  
+---
+
+### Why "Airymax"?
+
+One of the project founders, Liren Wang, puts it this way: Airymax gives agents a native runtime environment — not bolted on, but built from the ground up. With the right systems engineering, an agent running on a mid-tier model can **Ultimate Sublimation: punch far above its weight class**. The architecture doesn't just host the agent; it elevates it. That's the idea behind the name — reaching a state where capability transcends raw model size.
+
+Ultimate sublimation, through systems.
+
+---
 
 Copyright (c) 2025-2026 SPHARX Ltd. All Rights Reserved.
