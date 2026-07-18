@@ -1,0 +1,168 @@
+                    SPHARX Ltd. Open Core Layered License
+                          airymaxhub umbrella repository
+
+Copyright (c) 2025-2026 SPHARX Ltd. All Rights Reserved.
+SPDX-FileCopyrightText: 2025-2026 SPHARX Ltd.
+
+===========================================================================
+AIRYMAXHUB UMBRELLA REPOSITORY LICENSE OVERVIEW
+===========================================================================
+
+This umbrella repository (airymaxhub) aggregates multiple sub-repositories
+under the OpenAirymax organization. Each sub-repository carries its own
+LICENSE file that governs the code and documentation within that
+sub-repository. This file provides an overview of the layered license
+strategy applied across the entire airymaxhub tree.
+
+===========================================================================
+FIVE-LAYER LICENSE STRATEGY (Open Core Model)
+===========================================================================
+
+The airymaxhub project follows an Open Core layered licensing model,
+where different categories of content are licensed under different but
+compatible licenses, designed to balance:
+
+  - Open-source community growth (standards adoption)
+  - Commercial friendliness (broad reusability)
+  - Legal compliance with upstream licenses (Linux kernel)
+  - Protection of proprietary differentiators (MemoryRovol)
+
+The five layers, in order of increasing restrictiveness, are:
+
+  L1. OPEN STANDARDS LAYER (completely free, unrestricted)
+      -----------------------------------------------------
+      Path:       docs/OpenStandards/
+      License:    Creative Commons Attribution 4.0 (CC-BY-4.0)
+      SPDX:       CC-BY-4.0
+      Purpose:    Public technical standards for AI Agent runtime,
+                  IPC, security, memory, cognition, scheduling.
+                  Any third party may freely implement these standards
+                  in commercial or non-commercial products without
+                  copyleft obligations.
+
+  L2. DOCUMENTATION LAYER (free for non-commercial use)
+      -------------------------------------------------
+      Path:       docs/  (excluding docs/OpenStandards/)
+      License:    Creative Commons Attribution-NonCommercial 4.0
+      SPDX:       CC-BY-NC-4.0
+      Purpose:    Engineering specifications, design documents,
+                  coding standards, development guides.
+                  Free to copy and modify for non-commercial purposes.
+                  Commercial use requires a separate commercial
+                  license from SPHARX Ltd.
+
+  L3. OPEN-SOURCE CORE LAYER (dual-licensed, copyleft-friendly)
+      ---------------------------------------------------------
+      Paths:      agentrt/                 (8 sub-repos)
+                  sdk/                     (7 sub-repos)
+                  ecosystem/               (6 sub-repos)
+                  products/docker/         (container deployment)
+                  products/desktop/        (desktop client)
+                  agentrt-linux/           (8 sub-repos, EXCLUDING kernel)
+                  devtools/
+                  cmake/
+      License:    AGPL v3 + Apache 2.0 (dual license)
+      SPDX:       AGPL-3.0-or-later OR Apache-2.0
+      Purpose:    The open-source core of Airymax. Users may choose
+                  AGPL v3 (for copyleft network services) or Apache 2.0
+                  (for permissive commercial integration).
+
+  L4. KERNEL LAYER (Linux kernel compatible)
+      ---------------------------------------
+      Path:       agentrt-linux/kernel/
+      License:    GNU General Public License v2 only
+      SPDX:       GPL-2.0-only
+      Purpose:    Kernel-space code derived from or interoperating with
+                  the Linux kernel (6.6 LTS / 7.1). MUST use GPL-2.0-only
+                  to maintain license compatibility with upstream Linux.
+                  (AGPL v3 and Apache 2.0 are NOT compatible with
+                  GPL-2.0-only.)
+
+  L5. PROPRIETARY COMMERCIAL LAYER (closed-source, EULA)
+      ----------------------------------------------------
+      Path:       products/memoryrovol/
+      License:    SPHARX Ltd. End User License Agreement for MemoryRovol
+      SPDX:       LicenseRef-SPHARX-MemoryRovol-EULA-1.0
+      Purpose:    MemoryRovol is a proprietary, closed-source commercial
+                  product governed by its own EULA. It is NOT part of the
+                  open-source dual-license system and requires a separate
+                  commercial license key for use.
+
+===========================================================================
+LICENSE FILE LOCATIONS
+===========================================================================
+
+Each sub-repository contains its own LICENSE file that enforces the
+applicable layer. The complete list of LICENSE files and their layer
+assignments is documented in:
+
+  docs/AirymaxOS/50-engineering-standards/12-license-policy.md
+
+For a quick reference, see the table below:
+
+  Layer | License File Path                                          | SPDX
+  ------+------------------------------------------------------------+---------------------------
+  L1    | docs/OpenStandards/LICENSE                                 | CC-BY-4.0
+  L2    | docs/LICENSE                                               | CC-BY-NC-4.0
+  L3    | agentrt/LICENSE, agentrt/{atoms,commons,cupolas,daemons,   | AGPL-3.0-or-later
+        |   gateway,heapstore,protocols}/LICENSE,                     |   OR Apache-2.0
+        | sdk/LICENSE, sdk/{cli,sdk-go,sdk-python,sdk-rust,          |
+        |   sdk-typescript,tui}/LICENSE,                             |
+        | ecosystem/LICENSE, ecosystem/{examples,manager,openlab,     |
+        |   prompts,skills}/LICENSE,                                 |
+        | products/{docker,desktop}/LICENSE,                         |
+        | agentrt-linux/LICENSE, agentrt-linux/{cloudnative,cognition,|
+        |   memory,security,services,system,tests-linux}/LICENSE,    |
+        | devtools/LICENSE                                            |
+  L4    | agentrt-linux/kernel/LICENSE                                | GPL-2.0-only
+  L5    | products/memoryrovol/LICENSE                               | LicenseRef-SPHARX-...
+  ROOT  | airymaxhub/LICENSE  (this file)                            | Overview (see policy)
+
+===========================================================================
+TRADEMARK NOTICE
+===========================================================================
+
+Airymax, AgentRT, MicroCoreRT, CoreLoopThree, Thinkdual, Cupolas,
+MemoryRovol, TimeSliceInfer, SystemicLLM, AgentsIPC, and AirymaxOS are
+trademarks or registered trademarks of SPHARX Ltd. All other trademarks,
+product names, and company names mentioned in this project are the
+property of their respective owners.
+
+Use of SPHARX Ltd. trademarks in derivative works or redistributed
+copies is governed by the SPHARX Ltd. Trademark Policy, available at:
+  https://github.com/SpharxTeam/Airymax/blob/main/TRADEMARK.md
+
+===========================================================================
+COPYRIGHT HOLDER
+===========================================================================
+
+Copyright (c) 2025-2026 SPHARX Ltd. All Rights Reserved.
+
+===========================================================================
+THIRD-PARTY COMPONENTS NOTICE
+===========================================================================
+
+This product may include third-party open source software components,
+including but not limited to:
+
+  - Linux kernel (GPL-2.0-only) — see agentrt-linux/kernel/COPYING
+  - Various open-source libraries under their respective licenses
+
+Each third-party component is distributed under its own original open
+source license, and the relevant license terms and copyright statements
+are retained in the corresponding component directory and source code
+files. The use of third-party components does not affect the terms of
+either license applicable to the core code of this project.
+
+===========================================================================
+CONTACT AND LICENSING INQUIRIES
+===========================================================================
+
+For commercial licensing inquiries, trademark licensing, or questions
+about this license policy, contact:
+
+  SPHARX Ltd. - Airymax Team
+  Email: licensing@spharx.example.com  (placeholder — replace with real)
+
+For the latest version of this license policy, see:
+  docs/AirymaxOS/50-engineering-standards/12-license-policy.md
