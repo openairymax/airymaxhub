@@ -32,7 +32,7 @@ airymaxhub/                                   # 伞仓（git@atomgit.com:openair
 │   └── protocols/   [叶子仓]
 │
 ├── agentrt-linux/   [管理仓] → agentrt-linux.git   # AirymaxOS 智能体操作系统（与 agentrt 同级）
-│   ├── kernel/              [叶子仓]                # Linux 6.6 + sched_ext + eBPF + io_uring + Rust
+│   ├── kernel/              [叶子仓]                # Linux 6.6 + sched_tac + eBPF + io_uring + Rust
 │   ├── memory/              [叶子仓]                # MemoryRovol 内核态 + CXL + PMEM + MGLRU 多代 LRU
 │   ├── security/            [叶子仓]                # capability(seL4) + LSM + Landlock + 国密
 │   ├── cognition/           [叶子仓]                # CoreLoopThree kthread + LLM 调度 + Token 能效
