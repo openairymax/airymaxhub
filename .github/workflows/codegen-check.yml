@@ -1,0 +1,25 @@
+name: Codegen SSoT drift check
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  syscall-codegen-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      # P2-3: syscall.xml（SSoT）与生成产物 syscall_ids.h / syscall_table_gen.h
+      # 一致性校验。生成器仅依赖 python3 标准库，无需编译环境即可运行。
+      # 任一生成产物与 SSoT 漂移即返回非零，阻止合入。
+      - name: Verify syscall.xml SSoT drift (agentrt userland syscall)
+        run: |
+          python3 agentrt/tools/codegen/syscall_gen.py \
+            --input agentrt/atoms/syscall/include/syscall.xml \
+            --output-dir agentrt/atoms/syscall/include \
+            --check
