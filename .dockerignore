@@ -1,0 +1,83 @@
+# =============================================================================
+# Airymax 伞仓根 .dockerignore
+# 构建上下文为伞仓根（airymaxhub/），供 products/docker/*.Dockerfile 使用
+# =============================================================================
+
+# Git
+.git
+.gitignore
+.gitmodules
+.github
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 文档（Dockerfile 需要 README 时单独 COPY）
+docs/
+*.md
+!products/desktop/README.md
+
+# 测试与 CI 产物
+__pycache__/
+*.pyc
+.pytest_cache/
+coverage/
+.coverage
+htmlcov/
+node_modules/
+dist/
+build/
+*.egg-info/
+target/
+
+# 依赖锁文件（在 Dockerfile 中处理）
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+Pipfile.lock
+poetry.lock
+
+# 环境变量（安全）
+.env
+.env.*
+!.env.example
+!.env.staging.example
+!.env.production.example
+
+# 日志和数据
+logs/
+data/
+*.log
+*.db
+*.sqlite3
+
+# 临时文件
+tmp/
+temp/
+.tmp/
+.temp/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 本地构建缓存（agentrt / memoryrovol 等）
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.a
+*.so
+*.o
+
+# 调试符号
+*.dSYM/
+*.debug
+
+# 参考源码（体积大，Docker 构建不需要）
+.engineer-reference/
