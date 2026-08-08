@@ -24,6 +24,6 @@ airymaxhub 伞仓：
 
 本项目采用 **AGPL v3 + Apache 2.0** 双许可证，各叶子仓根目录均有各自的 LICENSE 文件。
 
-> 为什么叫极境？项目的发起人之一 Liren\_Wang 认为，它为 Agent 提供了原生基础的运行环境，利用特殊的工程设计，可以让使用的不是最先进 LLM 的 Agent 在这套系统加持下，将能力**极尽升华** Ultimate Sublimation 到一个新的境界，实现更高级的功能和性能，达到“越级战斗”的效果。
+> 为什么叫极境？项目的发起人之一 Liren_Wang 认为，它为 Agent 提供了原生基础的运行环境，利用特殊的工程设计，可以让使用的不是最先进 LLM 的 Agent 在这套系统加持下，将能力**极尽升华** Ultimate Sublimation 到一个新的境界，实现更高级的功能和性能，达到“越级战斗”的效果。
 
 Copyright (c) 2025-2026 SPHARX Ltd. All Rights Reserved.
