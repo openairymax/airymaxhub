@@ -1,0 +1,143 @@
+name: Build / Test / Coverage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ==================== Linux 全量构建 + 测试 + 覆盖率门禁 ====================
+  linux-build-test-coverage:
+    runs-on: ubuntu-latest
+    env:
+      BUILD_DIR: build
+      COVERAGE_THRESHOLD: 55
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 1
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build lcov \
+            libsqlite3-dev libcjson-dev libyaml-dev libcurl4-openssl-dev \
+            libssl-dev zlib1g-dev libzstd-dev \
+            libmicrohttpd-dev libwebsockets-dev libevent-dev \
+            python3 python3-pip
+
+      - name: Configure (ENABLE_COVERAGE=ON, BUILD_TESTS=ON)
+        run: |
+          cmake -S agentrt -B ${{ env.BUILD_DIR }} \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DBUILD_TESTS=ON \
+            -DENABLE_COVERAGE=ON \
+            -DAIRY_BUILD_ALL=ON \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      - name: Build
+        run: |
+          cmake --build ${{ env.BUILD_DIR }} --parallel "$(nproc)"
+
+      - name: Run tests (ctest)
+        run: |
+          ctest --test-dir ${{ env.BUILD_DIR }} --output-on-failure -j"$(nproc)"
+
+      # 覆盖率门禁：低于阈值（COVERAGE_THRESHOLD）即失败，
+      # 防止发行版功能回归（50-engineering-standards / TEST-03）。
+      - name: Collect coverage (lcov)
+        run: |
+          lcov --capture --directory ${{ env.BUILD_DIR }} \
+            --output-file ${{ env.BUILD_DIR }}/coverage.info \
+            --rc lcov_branch_coverage=1 \
+            --exclude "*/tests/*" --exclude "*/build/*" \
+            --exclude "*/agentrt/commons/third_party/*" \
+            --exclude "/usr/*"
+          lcov --summary ${{ env.BUILD_DIR }}/coverage.info --rc lcov_branch_coverage=1
+
+      - name: Enforce coverage threshold
+        run: |
+          LINE_PCT=$(lcov --summary ${{ env.BUILD_DIR }}/coverage.info --rc lcov_branch_coverage=1 2>&1 | grep -oP 'lines\.\.\.\.\d+\.\d+' | grep -oP '\d+\.\d+')
+          echo "Line coverage: ${LINE_PCT}% (threshold: ${{ env.COVERAGE_THRESHOLD }}%)"
+          if awk "BEGIN{exit !(${LINE_PCT} >= ${{ env.COVERAGE_THRESHOLD }})}"; then
+            echo "[OK] Coverage meets threshold"
+          else
+            echo "[FAIL] Coverage below threshold" && exit 1
+          fi
+
+  # ==================== Windows 跨平台构建门禁 ====================
+  windows-build:
+    runs-on: windows-latest
+    env:
+      BUILD_DIR: build
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 1
+
+      - name: Install dependencies (vcpkg)
+        shell: pwsh
+        run: |
+          vcpkg install sqlite3 cjson libyaml libcurl openssl zlib microhttpd websockets libevent --triplet x64-windows
+
+      - name: Configure (MSVC)
+        run: |
+          cmake -S agentrt -B ${{ env.BUILD_DIR }} `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" `
+            -DBUILD_TESTS=ON -DAIRY_BUILD_ALL=ON -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: |
+          cmake --build ${{ env.BUILD_DIR }} --config Release --parallel
+
+      - name: Run tests (ctest)
+        run: |
+          ctest --test-dir ${{ env.BUILD_DIR }} -C Release --output-on-failure
+
+  # ==================== MemoryRovol 独立构建门禁（OSS + PRO） ====================
+  memoryrovol-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mode: [oss, pro]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake lcov libsqlite3-dev libcjson-dev libyaml-dev \
+            libcurl4-openssl-dev libssl-dev zlib1g-dev libzstd-dev
+
+      - name: Configure (${{ matrix.mode }})
+        run: |
+          if [ "${{ matrix.mode }}" = "oss" ]; then
+            CMAKE_EXTRA="-DMEMORYROVOL_OSS=ON"
+          fi
+          cmake -S products/memoryrovol -B build \
+            -DBUILD_TESTS=ON -DWARNINGS_AS_ERRORS=ON ${CMAKE_EXTRA}
+
+      - name: Build
+        run: |
+          cmake --build build --parallel "$(nproc)"
+
+      - name: Run tests (ctest)
+        run: |
+          ctest --test-dir build --output-on-failure
