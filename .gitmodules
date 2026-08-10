@@ -22,11 +22,14 @@
 	path = docs
 	url = ../docs.git
 	branch = main
-[submodule "docs-closed"]
-	path = docs-closed
-	url = git@atomgit.com:openairymax/docs-closed.git
-	branch = main
+[submodule "closed-docs"]
+        path = closed-docs
+        url = git@atomgit.com:openairymax/closed-docs.git
+        branch = main
 [submodule "devtools"]
 	path = devtools
 	url = ../devtools.git
 	branch = main
+[submodule "closed-dev-build"]
+	path = closed-dev-build
+	url = git@gitcode.com:openairymax/closed-dev-build.git
