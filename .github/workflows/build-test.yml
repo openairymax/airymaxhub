@@ -76,6 +76,41 @@ jobs:
             echo "[FAIL] Coverage below threshold" && exit 1
           fi
 
+  # ==================== macOS 跨平台构建门禁 ====================
+  macos-build:
+    runs-on: macos-latest
+    env:
+      BUILD_DIR: build
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 1
+
+      - name: Install build dependencies (Homebrew)
+        run: |
+          brew install cmake ninja pkgconf sqlite cjson libyaml curl openssl zlib zstd \
+            libmicrohttpd libwebsockets libevent
+
+      # openssl / zlib / sqlite 为 keg-only，需显式导出 pkg-config 路径供 find_package 使用
+      - name: Configure (clang, BUILD_TESTS=ON)
+        run: |
+          export PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig:$(brew --prefix zlib)/lib/pkgconfig:$(brew --prefix sqlite)/lib/pkgconfig"
+          cmake -S agentrt -B ${{ env.BUILD_DIR }} \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DBUILD_TESTS=ON \
+            -DAIRY_BUILD_ALL=ON \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      - name: Build
+        run: |
+          cmake --build ${{ env.BUILD_DIR }} --parallel "$(sysctl -n hw.ncpu)"
+
+      - name: Run tests (ctest)
+        run: |
+          ctest --test-dir ${{ env.BUILD_DIR }} --output-on-failure -j"$(sysctl -n hw.ncpu)"
+
   # ==================== Windows 跨平台构建门禁 ====================
   windows-build:
     runs-on: windows-latest
