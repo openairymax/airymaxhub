@@ -1,0 +1,153 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. 0.1.1)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  # 三平台并行构建：install 聚合到 stage 后打包 agentrt-<version>.tar.gz，
+  # 结构对齐 install.sh 二进制模式（解压后 bin/ 直接可用）。
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: agentrt-linux-x64
+            pkg: tar.gz
+          - os: macos-latest
+            artifact: agentrt-macos-arm64
+            pkg: tar.gz
+          - os: windows-latest
+            artifact: agentrt-windows-x64
+            pkg: zip
+    runs-on: ${{ matrix.os }}
+    env:
+      BUILD_DIR: build
+      STAGE_DIR: stage
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 1
+
+      - name: Install build dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build \
+            libsqlite3-dev libcjson-dev libyaml-dev libcurl4-openssl-dev \
+            libssl-dev zlib1g-dev libzstd-dev \
+            libmicrohttpd-dev libwebsockets-dev libevent-dev \
+            python3 python3-pip
+
+      - name: Install build dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install cmake ninja pkgconf sqlite3 cjson libyaml curl openssl zlib zstd \
+            libmicrohttpd libwebsockets libevent
+
+      - name: Install build dependencies (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          vcpkg install sqlite3 cjson libyaml libcurl openssl zlib microhttpd websockets libevent --triplet x64-windows
+
+      - name: Configure (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cmake -S agentrt -B ${{ env.BUILD_DIR }} \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTS=OFF \
+            -DAIRY_BUILD_ALL=ON \
+            -DCMAKE_INSTALL_PREFIX="${{ env.STAGE_DIR }}"
+
+      # openssl/zlib 为 keg-only，需显式导出 pkg-config 路径供 find_package 使用
+      - name: Configure (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          export PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig:$(brew --prefix zlib)/lib/pkgconfig"
+          cmake -S agentrt -B ${{ env.BUILD_DIR }} \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTS=OFF \
+            -DAIRY_BUILD_ALL=ON \
+            -DCMAKE_INSTALL_PREFIX="${{ env.STAGE_DIR }}"
+
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cmake -S agentrt -B ${{ env.BUILD_DIR }} `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DBUILD_TESTS=OFF `
+            -DAIRY_BUILD_ALL=ON `
+            -DCMAKE_INSTALL_PREFIX="${{ env.STAGE_DIR }}"
+
+      - name: Build
+        run: |
+          cmake --build ${{ env.BUILD_DIR }} --config Release --parallel
+
+      - name: Install (aggregate bin/)
+        run: |
+          cmake --install ${{ env.BUILD_DIR }} --config Release
+
+      - name: Package (tar.gz)
+        if: runner.os != 'Windows'
+        run: |
+          tar -czf ${{ matrix.artifact }}.tar.gz -C ${{ env.STAGE_DIR }} .
+
+      - name: Package (zip)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "${{ env.STAGE_DIR }}\*" -DestinationPath "${{ matrix.artifact }}.zip"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}.*
+          if-no-files-found: error
+
+  # 汇聚三平台制品到 GitHub Release
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: AgentRT ${{ github.ref_name }}
+          body: |
+            ## AgentRT ${{ github.ref_name }}
+
+            AI Agent Runtime Platform Engineering — 服务器就绪的 Agent 运行时底座。
+
+            ### 安装
+
+            ```sh
+            AIRY_RELEASE_URL=<this-release-tarball-url> ./install.sh
+            ```
+
+            或直接解压 tarball 后运行 `bin/agentrt` 入口。
+          files: dist/*
+          draft: true
