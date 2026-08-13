@@ -378,6 +378,9 @@ export AIRY_LOG_DIR="\${AIRY_LOG_DIR:-\$AIRY_HOME/logs}"
 export AIRY_CONFIG_DIR="\${AIRY_CONFIG_DIR:-\$AIRY_HOME/config}"
 export AIRY_BIN_DIR="\${AIRY_BIN_DIR:-\$AIRY_HOME/bin}"
 export AIRY_LIB_DIR="\${AIRY_LIB_DIR:-\$AIRY_HOME/lib}"
+# Agent 工具 ACL 预授权（fail-closed：无此变量时 agent 工具全部拒绝）。
+# 与 agentrt-bootstrap.sh 保持一致；用户可显式覆盖收紧。
+export AIRY_AGENT_ACL="\${AIRY_AGENT_ACL:-coding_v1=fs_read,fs_write,fs_list,fs_glob,fs_grep,fs_edit,shell_run,web_search,web_fetch,git_diff,git_exec,git_apply}"
 export PATH="\${AIRY_HOME}/bin:\$PATH"
 EOF
     chmod 700 "${AIRY_HOME}/bin/agentrt-env.sh"
