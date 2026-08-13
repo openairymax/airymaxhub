@@ -55,7 +55,7 @@ jobs:
       - name: Install build dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install cmake ninja pkgconf sqlite3 cjson libyaml curl openssl zlib zstd \
+          brew install cmake ninja pkgconf sqlite cjson libyaml curl openssl zlib zstd \
             libmicrohttpd libwebsockets libevent
 
       - name: Install build dependencies (Windows)
@@ -73,11 +73,11 @@ jobs:
             -DAIRY_BUILD_ALL=ON \
             -DCMAKE_INSTALL_PREFIX="${{ env.STAGE_DIR }}"
 
-      # openssl/zlib 为 keg-only，需显式导出 pkg-config 路径供 find_package 使用
+      # openssl/zlib/sqlite 为 keg-only，需显式导出 pkg-config 路径供 find_package 使用
       - name: Configure (macOS)
         if: runner.os == 'macOS'
         run: |
-          export PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig:$(brew --prefix zlib)/lib/pkgconfig"
+          export PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig:$(brew --prefix zlib)/lib/pkgconfig:$(brew --prefix sqlite)/lib/pkgconfig"
           cmake -S agentrt -B ${{ env.BUILD_DIR }} \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_TESTS=OFF \
