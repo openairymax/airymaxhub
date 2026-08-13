@@ -300,6 +300,34 @@ build_tui() {
     log_ok "agentrt-tui 部署完成"
 }
 
+# ─── CLI 兼容入口：Rust TUI 缺失时用 C airy_cli 提供 agentrt-tui ──────
+# airymaxrt 启动器通过 TUI 可执行文件进入交互界面；当 Rust TUI 未构建
+# （cargo 缺失 / 构建失败 / 二进制包未含）时，以 C 实现的 airy_cli 作为
+# agentrt-tui 兼容入口，保证 `airymaxrt` 始终可用。包装脚本 source
+# install-pinned 的 agentrt-env.sh，导出 AIRY_HOME 等，使 CLI 能连接已
+# 安装的 daemon（不受调用 shell 的环境变量影响）。
+ensure_cli_entry() {
+    [ -x "${AIRY_HOME}/bin/agentrt-tui" ] && return 0
+    if [ -x "${AIRY_HOME}/bin/airy_cli" ]; then
+        cat > "${AIRY_HOME}/bin/agentrt-tui" <<'TUIEOF'
+#!/bin/sh
+# SPDX-FileCopyrightText: 2025-2026 SPHARX Ltd.
+# SPDX-License-Identifier: AGPL-3.0-or-later OR Apache-2.0
+# agentrt-tui compat entry for the C airy_cli (used when the Rust TUI is
+# not built). Sources the install-pinned environment so the CLI reaches
+# the installed daemons regardless of the calling shell.
+_DIR="$(cd -P "$(dirname "$0")" && pwd)"
+# shellcheck disable=SC1091
+. "$_DIR/agentrt-env.sh"
+exec "$_DIR/airy_cli" "$@"
+TUIEOF
+        chmod 755 "${AIRY_HOME}/bin/agentrt-tui"
+        log_ok "agentrt-tui 使用 C airy_cli 兼容入口（Rust TUI 未构建）"
+    else
+        log_warn "agentrt-tui 与 airy_cli 均缺失"
+    fi
+}
+
 # ─── secrets.env 模板 ──────────────────────────────────────────────────
 init_secrets() {
     local secrets="${AIRY_HOME}/config/secrets.env"
@@ -472,6 +500,7 @@ main() {
             build_and_install
             install_python_deps
             build_tui
+            ensure_cli_entry
         fi
         init_secrets
     fi
