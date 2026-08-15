@@ -96,7 +96,10 @@ jobs:
       # openssl / zlib / sqlite 为 keg-only，需显式导出 pkg-config 路径供 find_package 使用
       - name: Configure (clang, BUILD_TESTS=ON)
         run: |
-          export PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig:$(brew --prefix zlib)/lib/pkgconfig:$(brew --prefix sqlite)/lib/pkgconfig"
+          # curl 与 openssl/zlib/sqlite 同为 brew keg-only，须显式导出 pkg-config 路径，
+          # 否则 find_package(CURL) 与 pkg_check_modules(libcurl) 均落空，
+          # AIRY_HAS_CURL=FALSE 导致 macOS 构建静默剔除 HTTP/联网功能
+          export PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig:$(brew --prefix zlib)/lib/pkgconfig:$(brew --prefix sqlite)/lib/pkgconfig:$(brew --prefix curl)/lib/pkgconfig"
           cmake -S agentrt -B ${{ env.BUILD_DIR }} \
             -DCMAKE_BUILD_TYPE=Debug \
             -DBUILD_TESTS=ON \
@@ -126,7 +129,10 @@ jobs:
       - name: Install dependencies (vcpkg)
         shell: pwsh
         run: |
-          vcpkg install sqlite3 cjson libyaml libcurl openssl zlib microhttpd websockets libevent --triplet x64-windows
+          # vcpkg 包名：curl（port 名为 curl 而非 libcurl）；
+          # GNU libmicrohttpd 与 libwebsockets 的 port 名带 lib- 前缀，
+          # 旧写法 microhttpd/websockets/libcurl 会直接 vcpkg install 失败（Windows 构建阻塞）
+          vcpkg install sqlite3 cjson libyaml curl openssl zlib libmicrohttpd libwebsockets libevent --triplet x64-windows
 
       - name: Configure (MSVC)
         run: |
