@@ -358,14 +358,15 @@ init_secrets() {
         cp -f "${AIRY_SRC_DIR}/ecosystem/manager/model/model.yaml" "${AIRY_HOME}/config/" 2>/dev/null || true
     # 工具级权限规则（fail-closed：缺文件时 tool_d/agent_d 拒绝全部工具调用）。
     # 模板授予 coding_v1 标准编码工具集；生产部署应按最小权限裁剪。
+    # 权威路径 $AIRY_HOME/config/permission_rules.yaml（tool_d daemon_security
+    # 在启动时读取 airy_config_dir()/permission_rules.yaml）。
     local rules_tpl="${AIRY_SRC_DIR}/devtools/scripts/ops/templates/permission_rules.yaml"
     [ -f "${rules_tpl}" ] || rules_tpl="${AIRY_HOME}/config/permission_rules.yaml.example"
     if [ -f "${rules_tpl}" ]; then
-        mkdir -p "${AIRY_HOME}/config/cupolas"
-        if [ ! -f "${AIRY_HOME}/config/cupolas/permission_rules.yaml" ]; then
-            cp "${rules_tpl}" "${AIRY_HOME}/config/cupolas/permission_rules.yaml"
-            chmod 600 "${AIRY_HOME}/config/cupolas/permission_rules.yaml"
-            log_ok "已部署工具权限规则 ${AIRY_HOME}/config/cupolas/permission_rules.yaml"
+        if [ ! -f "${AIRY_HOME}/config/permission_rules.yaml" ]; then
+            cp "${rules_tpl}" "${AIRY_HOME}/config/permission_rules.yaml"
+            chmod 600 "${AIRY_HOME}/config/permission_rules.yaml"
+            log_ok "已部署工具权限规则 ${AIRY_HOME}/config/permission_rules.yaml"
         else
             log_ok "permission_rules.yaml 已存在，跳过"
         fi
