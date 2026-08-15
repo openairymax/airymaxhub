@@ -120,7 +120,8 @@ check_toolchain() {
 
 # ─── 创建 AIRY_HOME 目录骨架 ───────────────────────────────────────────
 init_home() {
-    mkdir -p "${AIRY_HOME}"/bin "${AIRY_HOME}"/lib "${AIRY_HOME}"/run \
+    mkdir -p "${AIRY_HOME}"/bin "${AIRY_HOME}"/lib "${AIRY_HOME}"/include \
+             "${AIRY_HOME}"/share "${AIRY_HOME}"/run \
              "${AIRY_HOME}"/logs "${AIRY_HOME}"/config "${AIRY_HOME}"/data \
              "${AIRY_HOME}"/tmp "${AIRY_HOME}"/cache "${AIRY_HOME}"/modules \
              "${AIRY_HOME}"/scripts
@@ -191,9 +192,13 @@ install_binary() {
     [ -n "$extracted" ] || { log_warn "release 包结构异常，回退源码构建"; return 1; }
     cp -f "${extracted}"/bin/* "${AIRY_HOME}/bin/" 2>/dev/null || true
     cp -f "${extracted}"/lib/* "${AIRY_HOME}/lib/" 2>/dev/null || true
-    cp -f "${extracted}"/include/* -r "${AIRY_HOME}/include/" 2>/dev/null || true
-    [ -f "${extracted}/config/secrets.env.example" ] && \
-        cp -f "${extracted}/config/secrets.env.example" "${AIRY_HOME}/config/" 2>/dev/null || true
+    cp -rf "${extracted}"/include/* "${AIRY_HOME}/include/" 2>/dev/null || true
+    # LICENSE/README（share/licenses|share/doc）随包分发，满足许可证随二进制分发要求
+    cp -rf "${extracted}"/share/* "${AIRY_HOME}/share/" 2>/dev/null || true
+    # 二进制包内置配置（secrets.env.example / agentrt.yaml / model.yaml）拷入 config/
+    if [ -d "${extracted}/config" ]; then
+        cp -f "${extracted}"/config/* "${AIRY_HOME}/config/" 2>/dev/null || true
+    fi
     log_ok "完全体二进制包安装完成"
     return 0
 }
@@ -239,8 +244,10 @@ build_and_install() {
     if [ -d "${MODULES_DIR}/atoms" ]; then
         cmake_args="${cmake_args} -DAIRY_ATOMS_PREBUILT_DIR=${MODULES_DIR}/atoms"
     fi
-    if [ -f "${MODULES_DIR}/memoryrovol/libairy_memoryrovol_pro.a" ]; then
-        cmake_args="${cmake_args} -DMEMORYROVOL_PRO_LIB=${MODULES_DIR}/memoryrovol/libairy_memoryrovol_pro.a"
+    # 预编译库文件名对齐真实归档名（target agentrt_memoryrovol →
+    # libagentrt_memoryrovol.a），与 install.ps1 及 products/memoryrovol 一致
+    if [ -f "${MODULES_DIR}/memoryrovol/libagentrt_memoryrovol.a" ]; then
+        cmake_args="${cmake_args} -DMEMORYROVOL_PRO_LIB=${MODULES_DIR}/memoryrovol/libagentrt_memoryrovol.a"
     fi
 
     log_info "cmake 配置（${cmake_args}）…"
@@ -333,6 +340,8 @@ init_secrets() {
     local secrets="${AIRY_HOME}/config/secrets.env"
     if [ ! -f "${secrets}" ]; then
         local template="${AIRY_SRC_DIR}/devtools/scripts/ops/templates/secrets.env.example"
+        # 二进制模式无源码树：回退到随包分发的 config/secrets.env.example
+        [ -f "${template}" ] || template="${AIRY_HOME}/config/secrets.env.example"
         if [ -f "${template}" ]; then
             cp "${template}" "${secrets}"
             chmod 600 "${secrets}"
@@ -347,6 +356,22 @@ init_secrets() {
         cp -f "${AIRY_SRC_DIR}/ecosystem/manager/configs/agentrt.yaml" "${AIRY_HOME}/config/" 2>/dev/null || true
     [ -f "${AIRY_SRC_DIR}/ecosystem/manager/model/model.yaml" ] && \
         cp -f "${AIRY_SRC_DIR}/ecosystem/manager/model/model.yaml" "${AIRY_HOME}/config/" 2>/dev/null || true
+    # 工具级权限规则（fail-closed：缺文件时 tool_d/agent_d 拒绝全部工具调用）。
+    # 模板授予 coding_v1 标准编码工具集；生产部署应按最小权限裁剪。
+    local rules_tpl="${AIRY_SRC_DIR}/devtools/scripts/ops/templates/permission_rules.yaml"
+    [ -f "${rules_tpl}" ] || rules_tpl="${AIRY_HOME}/config/permission_rules.yaml.example"
+    if [ -f "${rules_tpl}" ]; then
+        mkdir -p "${AIRY_HOME}/config/cupolas"
+        if [ ! -f "${AIRY_HOME}/config/cupolas/permission_rules.yaml" ]; then
+            cp "${rules_tpl}" "${AIRY_HOME}/config/cupolas/permission_rules.yaml"
+            chmod 600 "${AIRY_HOME}/config/cupolas/permission_rules.yaml"
+            log_ok "已部署工具权限规则 ${AIRY_HOME}/config/cupolas/permission_rules.yaml"
+        else
+            log_ok "permission_rules.yaml 已存在，跳过"
+        fi
+    else
+        log_warn "未找到 permission_rules.yaml 模板，工具调用将 fail-closed 拒绝"
+    fi
 }
 
 # ─── 固化安装位置 + 生成运行环境 + 启动器软链 ──────────────────────────
@@ -380,7 +405,14 @@ export AIRY_BIN_DIR="\${AIRY_BIN_DIR:-\$AIRY_HOME/bin}"
 export AIRY_LIB_DIR="\${AIRY_LIB_DIR:-\$AIRY_HOME/lib}"
 # Agent 工具 ACL 预授权（fail-closed：无此变量时 agent 工具全部拒绝）。
 # 与 agentrt-bootstrap.sh 保持一致；用户可显式覆盖收紧。
-export AIRY_AGENT_ACL="\${AIRY_AGENT_ACL:-coding_v1=fs_read,fs_write,fs_list,fs_glob,fs_grep,fs_edit,shell_run,web_search,web_fetch,git_diff,git_exec,git_apply}"
+AIRY_AGENT_ACL_TOOLS="fs_read,fs_write,fs_list,fs_glob,fs_grep,fs_edit,shell_run,web_search,web_fetch,git_diff,git_exec,git_apply"
+AIRY_AGENT_ACL_DEFAULT=""
+for _AGENT in coding_v1 devops_v1 backend_v1 frontend_v1 tester_v1 architect_v1 \
+              product_manager_v1 data_engineer_v1 security_v1 reviewer_v1 analyst_v1; do
+    AIRY_AGENT_ACL_DEFAULT="\${AIRY_AGENT_ACL_DEFAULT:+\${AIRY_AGENT_ACL_DEFAULT};}\${_AGENT}=\${AIRY_AGENT_ACL_TOOLS}"
+done
+export AIRY_AGENT_ACL="\${AIRY_AGENT_ACL:-\${AIRY_AGENT_ACL_DEFAULT}}"
+unset AIRY_AGENT_ACL_TOOLS AIRY_AGENT_ACL_DEFAULT _AGENT
 export PATH="\${AIRY_HOME}/bin:\$PATH"
 EOF
     chmod 700 "${AIRY_HOME}/bin/agentrt-env.sh"
@@ -390,11 +422,22 @@ EOF
         cp -f "${AIRY_SRC_DIR}/sdk/tui/scripts/airymaxrt" "${AIRY_HOME}/bin/airymaxrt"
         chmod 755 "${AIRY_HOME}/bin/airymaxrt"
     elif [ -f "${AIRY_HOME}/bin/agentrt-tui" ]; then
-        # 二进制模式无源码：生成轻量启动器
+        # 二进制模式无源码：生成轻量启动器。
+        # 从启动器自身位置推导 AIRY_HOME（含软链解析，POSIX 兼容），
+        # 使 BIN_DIR 软链在未 export AIRY_HOME 的任意 shell 中也可用。
         cat > "${AIRY_HOME}/bin/airymaxrt" <<EOF
 #!/bin/sh
-AIRY_HOME="\$(sed -n 's/^AIRY_HOME=//p' "\${AIRY_HOME:-$HOME/.airymaxrt}/config/install.env" 2>/dev/null | head -1)"
-AIRY_HOME="\${AIRY_HOME:-$HOME/.airymaxrt}"
+_SELF="\$0"
+while [ -L "\$_SELF" ]; do
+    _LINK="\$(readlink "\$_SELF")"
+    case "\$_LINK" in
+        /*) _SELF="\$_LINK" ;;
+        *)  _SELF="\$(dirname "\$_SELF")/\$_LINK" ;;
+    esac
+done
+_DIR="\$(cd -P "\$(dirname "\$_SELF")" && pwd)"
+AIRY_HOME="\${AIRY_HOME:-\$(sed -n 's/^AIRY_HOME=//p' "\${_DIR}/../config/install.env" 2>/dev/null | head -1)}"
+AIRY_HOME="\${AIRY_HOME:-\${_DIR}/..}"
 export AIRY_HOME
 exec "\$AIRY_HOME/bin/agentrt-tui" "\$@"
 EOF
@@ -406,18 +449,35 @@ EOF
         log_ok "启动器软链: ${BIN_DIR}/airymaxrt → ${AIRY_HOME}/bin/airymaxrt"
     fi
 
+    # daemon 启动编排脚本（bootstrap）：部署到 bin/（systemd 与手动启动引用）
+    if [ -f "${AIRY_SRC_DIR}/devtools/scripts/ops/bin/agentrt-bootstrap.sh" ]; then
+        cp -f "${AIRY_SRC_DIR}/devtools/scripts/ops/bin/agentrt-bootstrap.sh" "${AIRY_HOME}/bin/agentrt-bootstrap.sh"
+        chmod 755 "${AIRY_HOME}/bin/agentrt-bootstrap.sh"
+        log_ok "agentrt-bootstrap.sh 已部署到 bin/"
+    elif [ -f "${AIRY_HOME}/bin/agentrt-bootstrap.sh" ]; then
+        log_ok "agentrt-bootstrap.sh 已存在（二进制模式自带）"
+    else
+        log_warn "agentrt-bootstrap.sh 未部署（源码缺失且二进制未含）"
+    fi
+
     # 安装器自托管（供离线卸载）
     cp -f "$0" "${AIRY_HOME}/scripts/install.sh" 2>/dev/null || true
     log_ok "安装位置已固化: install.env + agentrt-env.sh + 启动器"
 }
 
 # ─── 17 daemon 完整性校验 ──────────────────────────────────────────────
+# 参数 strict：二进制模式下缺 daemon 视为安装失败（exit 1），
+# 避免「残缺安装却显示成功」；源码模式保留 warn。
 verify_daemons() {
-    local missing=""
+    local missing="" strict="$1"
     for d in ${EXPECTED_DAEMONS}; do
         [ -x "${AIRY_HOME}/bin/${d}" ] || missing="${missing} ${d}"
     done
     if [ -n "$missing" ]; then
+        if [ "$strict" = "strict" ]; then
+            log_err "daemon 校验失败，缺失:${missing}（二进制包不完整，请检查 release 制品）"
+            exit 1
+        fi
         log_warn "daemon 校验未全通过，缺失:${missing}（可能为二进制包未含全部组件）"
     else
         log_ok "17 个 daemon 全部就位"
@@ -472,7 +532,6 @@ main() {
         exit $?
     fi
 
-    check_toolchain
     init_home
 
     local installed=1
@@ -487,6 +546,8 @@ main() {
 
     if [ "$installed" -ne 0 ]; then
         log_info "进入源码构建模式（${AIRY_MODE}）"
+        # 工具链仅在源码构建路径要求（二进制模式无需 git/cmake/gcc）
+        check_toolchain
         prepare_source
 
         # 模式 B：无闭源源码 → 下载预编译模块包（URL 未配置时跳过，闭源功能受限）
@@ -503,13 +564,20 @@ main() {
             build_and_install
             install_python_deps
             build_tui
-            ensure_cli_entry
         fi
-        init_secrets
     fi
 
+    # 启动器兼容入口与 secrets 在两种模式（二进制/源码）下均需生成：
+    # 二进制模式依赖 airy_cli 生成 agentrt-tui 兼容入口，否则无任何启动命令
+    ensure_cli_entry
+    init_secrets
+
     finalize_install
-    verify_daemons
+    if [ "$installed" -eq 0 ]; then
+        verify_daemons strict
+    else
+        verify_daemons
+    fi
     print_summary
     log_ok "安装完成"
 }

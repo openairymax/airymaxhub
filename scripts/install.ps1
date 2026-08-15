@@ -58,8 +58,10 @@ $AIRY_SRC_DIR = Join-Path $AIRY_HOME "src\airymaxhub"
 $MODULES_DIR  = Join-Path $AIRY_HOME "modules"
 $BIN_DIR      = if ($BinDir) { $BinDir } elseif ($env:AIRY_BIN_DIR) { $env:AIRY_BIN_DIR } else { Join-Path $HOME ".local\bin" }
 
+# 与 install.sh 的 17 daemon 清单保持一致（含 think_d/cupolas_d）
 $EXPECTED_DAEMONS = @("monit_d","observe_d","info_d","notify_d","sched_d","channel_d","mem_d",
-                      "llm_d","tool_d","hook_d","plugin_d","agent_d","a2a_d","market_d","gateway_d")
+                      "llm_d","tool_d","hook_d","plugin_d","agent_d","a2a_d","market_d","gateway_d",
+                      "think_d","cupolas_d")
 
 function Require-Cmd {
     param([string]$Name)
@@ -72,15 +74,27 @@ function Require-Cmd {
     }
 }
 
+# 工具链仅在源码构建路径要求（二进制模式无需 git/cmake/编译器）
+function Check-Toolchain {
+    Require-Cmd "git"
+    Require-Cmd "cmake"
+    $compilers = @("cl","gcc","clang") | Where-Object { Get-Command $_ -ErrorAction SilentlyContinue }
+    if (-not $compilers) {
+        Write-Err "未找到 C 编译器（MSVC cl / gcc / clang）"
+        throw "no C compiler found"
+    }
+}
+
 function Init-Home {
-    foreach ($sub in @("bin","lib","run","logs","config","data","tmp","cache","modules","scripts")) {
+    foreach ($sub in @("bin","lib","include","share","run","logs","config","data","tmp","cache","modules","scripts")) {
         New-Item -ItemType Directory -Force -Path (Join-Path $AIRY_HOME $sub) | Out-Null
     }
     Write-OK "AIRY_HOME 就绪: $AIRY_HOME"
 }
 
 function Stop-Daemons {
-    foreach ($name in @("gateway_d","llm_d","agent_d","sched_d","mem_d","tool_d")) {
+    # 与 17 daemon 清单一致，避免卸载/停止残留进程
+    foreach ($name in $EXPECTED_DAEMONS) {
         Get-Process -Name $name -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
     }
     Start-Sleep -Seconds 1
@@ -133,11 +147,20 @@ function Install-Binary {
     curl.exe -fsSL --max-time 600 -o $zip $Url
     if ($LASTEXITCODE -ne 0) { Write-Warn "release 下载失败，回退源码构建"; return $false }
     Expand-Archive -Path $zip -DestinationPath (Join-Path $AIRY_HOME "tmp") -Force
-    Get-ChildItem (Join-Path $AIRY_HOME "tmp") -Directory | Where-Object { $_.Name -like "agentrt-*" } | ForEach-Object {
-        Get-ChildItem (Join-Path $_.FullName "bin") -ErrorAction SilentlyContinue | Copy-Item -Destination (Join-Path $AIRY_HOME "bin") -Force
-        Get-ChildItem (Join-Path $_.FullName "lib") -ErrorAction SilentlyContinue | Copy-Item -Destination (Join-Path $AIRY_HOME "lib") -Recurse -Force
-        Get-ChildItem (Join-Path $_.FullName "include") -ErrorAction SilentlyContinue | Copy-Item -Destination (Join-Path $AIRY_HOME "include") -Recurse -Force
+    # 包内必须含 agentrt-* 顶层目录（release.yml 打包约定），否则视为异常
+    $pkgDir = Get-ChildItem (Join-Path $AIRY_HOME "tmp") -Directory | Where-Object { $_.Name -like "agentrt-*" } | Select-Object -First 1
+    if (-not $pkgDir) { Write-Warn "release 包结构异常（缺 agentrt-* 顶层目录），回退源码构建"; return $false }
+    $copied = 0
+    Get-ChildItem (Join-Path $pkgDir.FullName "bin") -ErrorAction SilentlyContinue | ForEach-Object {
+        Copy-Item $_.FullName (Join-Path $AIRY_HOME "bin") -Force -ErrorAction SilentlyContinue
+        $copied++
     }
+    Get-ChildItem (Join-Path $pkgDir.FullName "lib") -ErrorAction SilentlyContinue | Copy-Item -Destination (Join-Path $AIRY_HOME "lib") -Recurse -Force
+    Get-ChildItem (Join-Path $pkgDir.FullName "include") -ErrorAction SilentlyContinue | Copy-Item -Destination (Join-Path $AIRY_HOME "include") -Recurse -Force
+    # LICENSE/README（share/）随包分发；config/ 内置模板（secrets.env.example 等）
+    Get-ChildItem (Join-Path $pkgDir.FullName "share") -ErrorAction SilentlyContinue | Copy-Item -Destination (Join-Path $AIRY_HOME "share") -Recurse -Force
+    Get-ChildItem (Join-Path $pkgDir.FullName "config") -ErrorAction SilentlyContinue | Copy-Item -Destination (Join-Path $AIRY_HOME "config") -Force
+    if ($copied -eq 0) { Write-Warn "release 包 bin/ 为空，回退源码构建"; return $false }
     Write-OK "完全体二进制包安装完成"
     return $true
 }
@@ -193,30 +216,80 @@ function Build-FromSource {
     Write-OK "源码构建安装完成"
 }
 
+# ─── secrets.env 模板（源码模式用 devtools 模板，二进制模式回退随包 config/） ─
+function Init-Secrets {
+    $secrets = Join-Path $AIRY_HOME "config\secrets.env"
+    if (-not (Test-Path $secrets)) {
+        $template = Join-Path $AIRY_SRC_DIR "devtools\scripts\ops\templates\secrets.env.example"
+        if (-not (Test-Path $template)) { $template = Join-Path $AIRY_HOME "config\secrets.env.example" }
+        if (Test-Path $template) {
+            Copy-Item $template $secrets -Force
+            Write-Warn "已生成 $secrets，请填写 LLM API key"
+        } else {
+            Write-Warn "未找到 secrets.env 模板，跳过"
+        }
+    } else {
+        Write-OK "secrets.env 已存在，跳过"
+    }
+    # agentrt.yaml / model.yaml（二进制模式已由 Install-Binary 拷入 config/）
+    $srcYaml = Join-Path $AIRY_SRC_DIR "ecosystem\manager\configs\agentrt.yaml"
+    if (Test-Path $srcYaml) { Copy-Item $srcYaml (Join-Path $AIRY_HOME "config") -Force -ErrorAction SilentlyContinue }
+    $srcModel = Join-Path $AIRY_SRC_DIR "ecosystem\manager\model\model.yaml"
+    if (Test-Path $srcModel) { Copy-Item $srcModel (Join-Path $AIRY_HOME "config") -Force -ErrorAction SilentlyContinue }
+}
+
 # ─── 固化安装位置 + 生成运行环境 + 启动器 ────────────────────────────────
 function Finalize-Install {
     $envFile = Join-Path $AIRY_HOME "config\install.env"
     $link = Join-Path $BIN_DIR "airymaxrt.cmd"
+    # vault 主密钥口令（AES-256-GCM 凭据加密，64 位 hex），对齐 install.sh
+    $vaultPassword = -join (1..64 | ForEach-Object { '{0:x}' -f (Get-Random -Maximum 16) })
     @(
         "# AirymaxRT 安装信息（由 install.ps1 生成，勿手改）",
         "AIRY_HOME=$AIRY_HOME",
         "AIRY_VERSION=$AIRY_VERSION",
         "AIRY_BIN_LINK=$link",
-        "INSTALLED_AT=$(Get-Date -Format o)"
+        "INSTALLED_AT=$(Get-Date -Format o)",
+        "AIRY_VAULT_PASSWORD=$vaultPassword"
     ) | Set-Content -Path $envFile -Encoding UTF8
 
+    # 运行环境脚本（agentrt-env.ps1，含 Agent 工具 ACL 预授权，
+    # fail-closed：无 AIRY_AGENT_ACL 时 agent 工具全部拒绝，对齐 install.sh）
+    $aclTools = "fs_read,fs_write,fs_list,fs_glob,fs_grep,fs_edit,shell_run,web_search,web_fetch,git_diff,git_exec,git_apply"
+    $agents = @("coding_v1","devops_v1","backend_v1","frontend_v1","tester_v1","architect_v1",
+                "product_manager_v1","data_engineer_v1","security_v1","reviewer_v1","analyst_v1")
+    $aclDefault = ($agents | ForEach-Object { "$_=$aclTools" }) -join ";"
+    $envScript = @(
+        "# AgentRT 运行环境（由 install.ps1 生成，source 使用）",
+        ('$env:AIRY_HOME = "' + $AIRY_HOME + '"'),
+        # PowerShell 5.1 兼容：避免 ?? 运算符（PS7+ 才有）
+        'if (-not $env:AIRY_RUNTIME_DIR) { $env:AIRY_RUNTIME_DIR = Join-Path $env:AIRY_HOME "run" }',
+        'if (-not $env:AIRY_LOG_DIR) { $env:AIRY_LOG_DIR = Join-Path $env:AIRY_HOME "logs" }',
+        'if (-not $env:AIRY_CONFIG_DIR) { $env:AIRY_CONFIG_DIR = Join-Path $env:AIRY_HOME "config" }',
+        'if (-not $env:AIRY_BIN_DIR) { $env:AIRY_BIN_DIR = Join-Path $env:AIRY_HOME "bin" }',
+        'if (-not $env:AIRY_LIB_DIR) { $env:AIRY_LIB_DIR = Join-Path $env:AIRY_HOME "lib" }',
+        "# Agent 工具 ACL 预授权（fail-closed：无此变量时 agent 工具全部拒绝）",
+        ('if (-not $env:AIRY_AGENT_ACL) { $env:AIRY_AGENT_ACL = "' + $aclDefault + '" }'),
+        '$env:PATH = (Join-Path $env:AIRY_HOME "bin") + [IO.Path]::PathSeparator + $env:PATH'
+    )
+    $envScript | Set-Content -Path (Join-Path $AIRY_HOME "bin\agentrt-env.ps1") -Encoding UTF8
+
     # 启动器（读 install.env 定位运行时根，任意路径执行 airymaxrt 即启动）
+    # Windows zip 不构建 Rust TUI：优先 agentrt-tui.exe，回退 C 实现 airy_cli.exe
     $launcher = Join-Path $AIRY_HOME "bin\airymaxrt.cmd"
     $cmdContent = @(
         "@echo off",
         "setlocal",
         "set ""AIRY_HOME=%USERPROFILE%\.airymaxrt""",
         "for /f ""tokens=2 delims=="" %%a in ('findstr /b ""AIRY_HOME="" ""%AIRY_HOME%\config\install.env"" 2^>nul') do set ""AIRY_HOME=%%a""",
-        "if not exist ""%AIRY_HOME%\bin\agentrt-tui.exe"" (",
-        "  echo [FAIL] agentrt-tui not found under %AIRY_HOME%\bin",
+        "if exist ""%AIRY_HOME%\bin\agentrt-tui.exe"" (",
+        "  ""%AIRY_HOME%\bin\agentrt-tui.exe"" %*",
+        ") else if exist ""%AIRY_HOME%\bin\airy_cli.exe"" (",
+        "  ""%AIRY_HOME%\bin\airy_cli.exe"" %*",
+        ") else (",
+        "  echo [FAIL] agentrt-tui / airy_cli not found under %AIRY_HOME%\bin",
         "  exit /b 1",
         ")",
-        ""%AIRY_HOME%\bin\agentrt-tui.exe"" %*",
         "endlocal"
     )
     $cmdContent | Set-Content -Path $launcher -Encoding ASCII
@@ -231,12 +304,20 @@ function Finalize-Install {
 
 # ─── 完整性校验 ──────────────────────────────────────────────────────────
 function Verify-Daemons {
+    param([switch]$Strict)
     $missing = @()
     foreach ($d in $EXPECTED_DAEMONS) {
         if (-not (Test-Path (Join-Path $AIRY_HOME "bin\$d.exe"))) { $missing += $d }
     }
-    if ($missing.Count -gt 0) { Write-Warn "daemon 校验未全通过，缺失: $($missing -join ' ')" }
-    else { Write-OK "15 个 daemon 全部就位" }
+    if ($missing.Count -gt 0) {
+        if ($Strict) {
+            Write-Err "daemon 校验失败，缺失: $($missing -join ' ')（二进制包不完整，请检查 release 制品）"
+            exit 1
+        }
+        Write-Warn "daemon 校验未全通过，缺失: $($missing -join ' ')"
+    } else {
+        Write-OK "$($EXPECTED_DAEMONS.Count) 个 daemon 全部就位"
+    }
 }
 
 # ─── 主流程 ──────────────────────────────────────────────────────────────
@@ -253,7 +334,6 @@ Write-Host ""
 Write-Info "Airymax AgentRT 安装程序"
 Write-Info "AIRY_HOME = $AIRY_HOME | 模式 = $Mode"
 
-Require-Cmd "git"
 Require-Cmd "curl"
 Init-Home
 
@@ -265,6 +345,8 @@ if ($Mode -eq "binary" -or ($Mode -eq "auto" -and $env:AIRY_RELEASE_URL)) {
 
 if (-not $installed) {
     Write-Info "进入源码构建模式（$Mode）"
+    # 工具链仅在源码构建路径要求（二进制模式无需 git/cmake/编译器）
+    Check-Toolchain
     # 模式 B：无闭源源码 → 先下载闭源预编译模块（cmake 配置需要）
     if ($Mode -ne "source") {
         Fetch-PrebuiltModule "atoms" $env:AIRY_ATOMS_PREBUILT_URL "atoms"
@@ -273,8 +355,9 @@ if (-not $installed) {
     Build-FromSource
 }
 
+Init-Secrets
 Finalize-Install
-Verify-Daemons
+if ($installed) { Verify-Daemons -Strict } else { Verify-Daemons }
 
 Write-Host ""
 Write-Host "安装位置:   $AIRY_HOME" -ForegroundColor Green

@@ -62,7 +62,8 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          vcpkg install sqlite3 cjson libyaml libcurl openssl zlib microhttpd websockets libevent --triplet x64-windows
+          # vcpkg 包名：curl（非 libcurl）、libmicrohttpd/libwebsockets（带 lib- 前缀）
+          vcpkg install sqlite3 cjson libyaml curl openssl zlib libmicrohttpd libwebsockets libevent --triplet x64-windows
 
       - name: Configure (Linux)
         if: runner.os == 'Linux'
@@ -77,7 +78,7 @@ jobs:
       - name: Configure (macOS)
         if: runner.os == 'macOS'
         run: |
-          export PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig:$(brew --prefix zlib)/lib/pkgconfig:$(brew --prefix sqlite)/lib/pkgconfig"
+          export PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig:$(brew --prefix zlib)/lib/pkgconfig:$(brew --prefix sqlite)/lib/pkgconfig:$(brew --prefix curl)/lib/pkgconfig"
           cmake -S agentrt -B ${{ env.BUILD_DIR }} \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_TESTS=OFF \
@@ -102,16 +103,42 @@ jobs:
         run: |
           cmake --install ${{ env.BUILD_DIR }} --config Release
 
+      # install.sh 二进制模式依赖 bin/agentrt-bootstrap.sh（daemon 编排脚本），
+      # 但其位于 devtools 子仓（非 agentrt 树），cmake --install 不会带入，
+      # 必须在此显式部署，否则二进制安装后 daemon 无法一键启动编排。
+      - name: Deploy bootstrap script (tar.gz platforms)
+        if: runner.os != 'Windows'
+        run: |
+          if [ -f "devtools/scripts/ops/bin/agentrt-bootstrap.sh" ]; then
+            cp -f "devtools/scripts/ops/bin/agentrt-bootstrap.sh" "${{ env.STAGE_DIR }}/bin/agentrt-bootstrap.sh"
+            chmod 755 "${{ env.STAGE_DIR }}/bin/agentrt-bootstrap.sh"
+          fi
+
+      # 打包：包内建 agentrt-<version> 顶层目录。install.sh/install.ps1 二进制
+      # 模式按 agentrt-* 目录名匹配解压位置，无顶层目录时二进制安装 100% 失败
+      # （回退源码构建 / 静默空装）。同时内置运行时配置模板供二进制模式
+      # init_secrets 生成 secrets.env/agentrt.yaml/model.yaml。
       - name: Package (tar.gz)
         if: runner.os != 'Windows'
         run: |
-          tar -czf ${{ matrix.artifact }}.tar.gz -C ${{ env.STAGE_DIR }} .
+          VERSION="${{ github.ref_name }}"; VERSION="${VERSION#v}"
+          PKG_DIR="pkg/agentrt-${VERSION}"
+          mkdir -p "${PKG_DIR}/config"
+          cp -rf "${{ env.STAGE_DIR }}"/. "${PKG_DIR}/"
+          cp -f ecosystem/manager/configs/agentrt.yaml "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -f ecosystem/manager/model/model.yaml "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -f devtools/scripts/ops/templates/secrets.env.example "${PKG_DIR}/config/" 2>/dev/null || true
+          tar -czf ${{ matrix.artifact }}.tar.gz -C pkg .
 
       - name: Package (zip)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Compress-Archive -Path "${{ env.STAGE_DIR }}\*" -DestinationPath "${{ matrix.artifact }}.zip"
+          $VERSION = "${{ github.ref_name }}".TrimStart('v')
+          $pkgDir = "pkg\agentrt-$VERSION"
+          New-Item -ItemType Directory -Path $pkgDir -Force | Out-Null
+          Copy-Item -Path "${{ env.STAGE_DIR }}\*" -Destination "$pkgDir\" -Recurse -Force
+          Compress-Archive -Path "pkg\*" -DestinationPath "${{ matrix.artifact }}.zip"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -148,6 +175,8 @@ jobs:
             AIRY_RELEASE_URL=<this-release-tarball-url> ./install.sh
             ```
 
-            或直接解压 tarball 后运行 `bin/agentrt` 入口。
+            或直接解压 tarball 后：
+            - `bin/agentrt-bootstrap.sh start` 一键启动 17 个 daemon
+            - `bin/airy_cli` 进入 CLI 交互界面（或 `airymaxrt`）
           files: dist/*
           draft: true
