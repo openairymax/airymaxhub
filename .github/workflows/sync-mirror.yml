@@ -42,6 +42,19 @@ jobs:
               exit 0
             fi
 
+            # 确保 GitHub 目标仓库存在：镜像 push 到不存在的仓库会报
+            # "repository not found" 并以 set -e 中断整条同步链（实测
+            # ecosystem/agents 曾在 GitHub 缺失导致镜像停留在旧提交）。
+            # 缺失时创建为公开仓库（gh 需 org 创建权限，见 GH_TOKEN scope）。
+            if ! gh repo view "openairymax/$repo" >/dev/null 2>&1; then
+              if gh repo create "openairymax/$repo" --public --confirm >/dev/null 2>&1; then
+                echo "  created missing mirror: openairymax/$repo"
+              else
+                echo "  warn: cannot create openairymax/$repo, skipping"
+                exit 0
+              fi
+            fi
+
             # 推送到 GitHub
             git remote add github https://x-access-token:${GH_TOKEN}@github.com/openairymax/$repo.git 2>/dev/null || true
             git remote add gitee https://oauth2:${GT_TOKEN}@gitee.com/openairymax/$repo.git 2>/dev/null || true
