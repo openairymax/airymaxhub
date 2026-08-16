@@ -57,7 +57,7 @@ log_err()   { printf "${C_RED}[FAIL]${C_NC} %s\n" "$1"; }
 # ─── 默认值 ──────────────────────────────────────────────────────────────
 AIRY_HOME="${AIRY_HOME:-$HOME/.airymaxrt}"
 AIRY_REPO_URL="${AIRY_REPO_URL:-https://atomgit.com/openairymax/airymaxhub.git}"
-AIRY_VERSION="${AIRY_VERSION:-main}"
+AIRY_VERSION="${AIRY_VERSION:-v0.1.2}"
 AIRY_BUILD_JOBS="${AIRY_BUILD_JOBS:-$(nproc 2>/dev/null || echo 4)}"
 AIRY_MODE="${AIRY_MODE:-auto}"
 BIN_DIR="${BIN_DIR:-$HOME/.local/bin}"
@@ -223,7 +223,9 @@ prepare_source() {
     if [ ! -d "${AIRY_SRC_DIR}/.git" ]; then
         log_info "git 拉取 airymaxhub（${AIRY_REPO_URL}）…"
         mkdir -p "$(dirname "${AIRY_SRC_DIR}")"
-        # 管理仓 clone（公开子仓递归）；闭源子仓由预编译模块包补齐，避免认证失败中断
+        # 管理仓 clone（公开子仓递归）；闭源子仓（closed-docs /
+        # closed-dev-build，.gitmodules 标 update=none）由预编译模块包
+        # 补齐，避免认证失败中断
         git clone --depth 1 -b "${AIRY_VERSION}" "${AIRY_REPO_URL}" "${AIRY_SRC_DIR}" \
             || { log_err "git 拉取失败（若子仓私有，请配置 AIRY_RELEASE_URL 走二进制模式）"; exit 1; }
         git -C "${AIRY_SRC_DIR}" submodule update --init --depth 1 2>/dev/null || \
@@ -238,7 +240,7 @@ prepare_source() {
 # ─── 构建（模式 B/C 共用） ──────────────────────────────────────────────
 build_and_install() {
     local build_dir="${AIRY_HOME}/build"
-    local cmake_args="-DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${AIRY_HOME}"
+    local cmake_args="-DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DENABLE_SANITIZERS=OFF -DCMAKE_INSTALL_PREFIX=${AIRY_HOME}"
 
     # 闭源模块预编译路径注入（模式 B）
     if [ -d "${MODULES_DIR}/atoms" ]; then

@@ -34,8 +34,10 @@ jobs:
             repo=$(basename `pwd`)
             echo "=== $repo ==="
 
-            # 跳过闭源仓库
-            if [ "$repo" = "docs-closed" ] || [ "$repo" = "memoryrovol" ]; then
+            # 跳过闭源仓库（closed-docs / closed-dev-build 为私有仓，
+            # 无公网镜像；docs-closed / memoryrovol 为历史名兜底）
+            if [ "$repo" = "closed-docs" ] || [ "$repo" = "closed-dev-build" ] || \
+               [ "$repo" = "docs-closed" ] || [ "$repo" = "memoryrovol" ]; then
               echo "  skip (closed source)"
               exit 0
             fi

@@ -52,7 +52,7 @@ if ($Help) {
 
 # ─── 参数 ────────────────────────────────────────────────────────────────
 $AIRY_HOME    = if ($Prefix) { $Prefix } elseif ($env:AIRY_HOME) { $env:AIRY_HOME } else { Join-Path $HOME ".airymaxrt" }
-$AIRY_VERSION = if ($env:AIRY_VERSION) { $env:AIRY_VERSION } else { "main" }
+$AIRY_VERSION = if ($env:AIRY_VERSION) { $env:AIRY_VERSION } else { "v0.1.2" }
 $AIRY_REPO_URL = if ($env:AIRY_REPO_URL) { $env:AIRY_REPO_URL } else { "https://atomgit.com/openairymax/airymaxhub.git" }
 $AIRY_SRC_DIR = Join-Path $AIRY_HOME "src\airymaxhub"
 $MODULES_DIR  = Join-Path $AIRY_HOME "modules"
@@ -194,11 +194,18 @@ function Build-FromSource {
     Write-OK "源码就绪: $AIRY_SRC_DIR"
 
     $buildDir = Join-Path $AIRY_HOME "build"
-    $cmakeArgs = "-DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=$AIRY_HOME"
+    $cmakeArgs = "-DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DENABLE_SANITIZERS=OFF -DCMAKE_INSTALL_PREFIX=$AIRY_HOME"
     if (Test-Path (Join-Path $MODULES_DIR "atoms")) {
         $cmakeArgs += " -DAIRY_ATOMS_PREBUILT_DIR=$(Join-Path $MODULES_DIR 'atoms')"
     }
-    $mrLib = Join-Path $MODULES_DIR "memoryrovol\libagentrt_memoryrovol.a"
+    # 预编译库文件名：Windows 为 .lib（MSVC 静态库），POSIX 为 .a。
+    # 与 install.sh 及 products/memoryrovol 的归档命名对齐。
+    $mrLibName = "libagentrt_memoryrovol.lib"
+    $mrLibA = Join-Path $MODULES_DIR "memoryrovol\libagentrt_memoryrovol.a"
+    $mrLib = Join-Path $MODULES_DIR "memoryrovol\$mrLibName"
+    if (-not (Test-Path $mrLib) -and (Test-Path $mrLibA)) {
+        $mrLib = $mrLibA
+    }
     if (Test-Path $mrLib) { $cmakeArgs += " -DMEMORYROVOL_PRO_LIB=$mrLib" }
 
     Write-Info "cmake 配置…"
