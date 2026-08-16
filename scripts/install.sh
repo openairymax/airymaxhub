@@ -406,7 +406,7 @@ export AIRY_BIN_DIR="\${AIRY_BIN_DIR:-\$AIRY_HOME/bin}"
 export AIRY_LIB_DIR="\${AIRY_LIB_DIR:-\$AIRY_HOME/lib}"
 # Agent 工具 ACL 预授权（fail-closed：无此变量时 agent 工具全部拒绝）。
 # 与 agentrt-bootstrap.sh 保持一致；用户可显式覆盖收紧。
-AIRY_AGENT_ACL_TOOLS="fs_read,fs_write,fs_list,fs_glob,fs_grep,fs_edit,shell_run,web_search,web_fetch,git_diff,git_exec,git_apply"
+AIRY_AGENT_ACL_TOOLS="fs_read,fs_write,fs_list,fs_glob,fs_grep,fs_edit,fs_delete,shell_run,web_search,web_fetch,git_diff,git_exec,git_apply"
 AIRY_AGENT_ACL_DEFAULT=""
 for _AGENT in coding_v1 devops_v1 backend_v1 frontend_v1 tester_v1 architect_v1 \
               product_manager_v1 data_engineer_v1 security_v1 reviewer_v1 analyst_v1; do
