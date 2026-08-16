@@ -187,7 +187,11 @@ function Build-FromSource {
         New-Item -ItemType Directory -Force -Path (Split-Path $AIRY_SRC_DIR) | Out-Null
         git clone --depth 1 -b $AIRY_VERSION $AIRY_REPO_URL $AIRY_SRC_DIR
         if ($LASTEXITCODE -ne 0) { Write-Err "git 拉取失败（子仓私有时请配置 AIRY_RELEASE_URL 走二进制模式）"; throw "git clone failed" }
-        git -C $AIRY_SRC_DIR submodule update --init --depth 1 2>$null
+        # --recursive：agentrt 的 7 个核心子仓（atoms/commons/daemons/gateway/
+        # cupolas/protocols/heapstore）与 sdk/ecosystem 子仓均为公开仓，必须
+        # 一并拉取，否则模式 C 源码构建缺核心源码必然失败。闭源子仓（标
+        # update=none）自动跳过。
+        git -C $AIRY_SRC_DIR submodule update --init --recursive --depth 1 2>$null
     } else {
         Write-Info "airymaxhub 源码已存在，复用本地源码树"
     }
