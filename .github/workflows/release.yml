@@ -15,20 +15,24 @@ permissions:
   contents: write
 
 jobs:
-  # 三平台并行构建：install 聚合到 stage 后打包 agentrt-<version>.tar.gz，
-  # 结构对齐 install.sh 二进制模式（解压后 bin/ 直接可用）。
+  # 三平台并行构建：install 聚合到 stage 后打包
+  # agentrt-<version>-<os>-<arch>.{tar.gz,zip}，结构对齐 install.sh 二进制
+  # 模式（解压后 bin/ 直接可用）。制品命名规范：
+  #   agentrt-<v版本>-<os>-<arch>（如 agentrt-v0.1.2-linux-x86_64.tar.gz）
+  # 与 devtools/scripts/ci/release/package-full-release.sh 完全体包命名对齐，
+  # 默认承载 atomgit，GitHub Release 为镜像。
   build:
     strategy:
       matrix:
         include:
           - os: ubuntu-latest
-            artifact: agentrt-linux-x64
+            platform: linux-x86_64
             pkg: tar.gz
           - os: macos-latest
-            artifact: agentrt-macos-arm64
+            platform: macos-arm64
             pkg: tar.gz
           - os: windows-latest
-            artifact: agentrt-windows-x64
+            platform: windows-x64
             pkg: zip
     runs-on: ${{ matrix.os }}
     env:
@@ -121,33 +125,38 @@ jobs:
       # 模式按 agentrt-* 目录名匹配解压位置，无顶层目录时二进制安装 100% 失败
       # （回退源码构建 / 静默空装）。同时内置运行时配置模板供二进制模式
       # init_secrets 生成 secrets.env/agentrt.yaml/model.yaml。
+      # 制品名统一为 agentrt-<v版本>-<os>-<arch>（如 agentrt-v0.1.2-linux-x86_64.tar.gz）。
       - name: Package (tar.gz)
         if: runner.os != 'Windows'
         run: |
-          VERSION="${{ github.ref_name }}"; VERSION="${VERSION#v}"
+          REF="${{ github.ref_name }}"; VERSION="${REF#v}"
           PKG_DIR="pkg/agentrt-${VERSION}"
           mkdir -p "${PKG_DIR}/config"
           cp -rf "${{ env.STAGE_DIR }}"/. "${PKG_DIR}/"
           cp -f ecosystem/manager/configs/agentrt.yaml "${PKG_DIR}/config/" 2>/dev/null || true
           cp -f ecosystem/manager/model/model.yaml "${PKG_DIR}/config/" 2>/dev/null || true
           cp -f devtools/scripts/ops/templates/secrets.env.example "${PKG_DIR}/config/" 2>/dev/null || true
-          tar -czf ${{ matrix.artifact }}.tar.gz -C pkg .
+          ARTIFACT="agentrt-${REF}-${{ matrix.platform }}"
+          tar -czf "${ARTIFACT}.tar.gz" -C pkg .
+          echo "artifact_name=${ARTIFACT}" >> "$GITHUB_ENV"
 
       - name: Package (zip)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $VERSION = "${{ github.ref_name }}".TrimStart('v')
+          $REF = "${{ github.ref_name }}"; $VERSION = $REF.TrimStart('v')
           $pkgDir = "pkg\agentrt-$VERSION"
           New-Item -ItemType Directory -Path $pkgDir -Force | Out-Null
           Copy-Item -Path "${{ env.STAGE_DIR }}\*" -Destination "$pkgDir\" -Recurse -Force
-          Compress-Archive -Path "pkg\*" -DestinationPath "${{ matrix.artifact }}.zip"
+          $artifact = "agentrt-$REF-${{ matrix.platform }}"
+          Compress-Archive -Path "pkg\*" -DestinationPath "$artifact.zip"
+          "artifact_name=$artifact" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
-          path: ${{ matrix.artifact }}.*
+          name: ${{ env.artifact_name }}
+          path: ${{ env.artifact_name }}.*
           if-no-files-found: error
 
   # 汇聚三平台制品到 GitHub Release
@@ -174,8 +183,11 @@ jobs:
 
             ### 安装
 
+            下载对应平台包并解压（或直接走安装器二进制模式）：
+
             ```sh
-            AIRY_RELEASE_URL=<this-release-tarball-url> ./install.sh
+            # 以 Linux x86_64 为例；macOS → agentrt-<版本>-macos-arm64，Windows → .zip
+            AIRY_RELEASE_URL="https://atomgit.com/openairymax/airymaxhub/releases/download/${{ github.ref_name }}/agentrt-${{ github.ref_name }}-linux-x86_64.tar.gz" ./install.sh
             ```
 
             或直接解压 tarball 后：
