@@ -299,9 +299,37 @@ install_python_deps() {
     fi
 }
 
+# ─── MemoryRovol OSS 库构建（TUI 独立链接用，源码模式） ───────────────
+# TUI 是独立 Rust 二进制，无法链接 PRO 库（依赖 agentrt 运行时符号）；
+# 本地持有 memoryrovol 源码（模式 C）时以 OSS 模式（L1+L2）编译并部署为
+# $AIRY_HOME/lib/libagentrt_memoryrovol_oss.a，TUI build.rs 才会选中它
+#（2.6：本地源码构建 memoryrovol 全功能开启）。无源码则跳过，
+# TUI 降级 JsonlMemory（真实可用后备）。
+build_mr_oss() {
+    local mr_src="${AIRY_SRC_DIR}/products/memoryrovol"
+    [ -d "$mr_src" ] || { log_warn "products/memoryrovol 源码缺失，跳过 OSS 库构建（TUI 降级 JsonlMemory）"; return 0; }
+    local mr_build="${AIRY_HOME}/build-mr-oss"
+    log_info "构建 MemoryRovol OSS 库（L1+L2，TUI 独立链接）…"
+    cmake -S "$mr_src" -B "$mr_build" \
+        -DCMAKE_BUILD_TYPE=Release -DMEMORYROVOL_OSS=ON -DBUILD_TESTS=OFF \
+        || { log_warn "memoryrovol OSS cmake 配置失败，TUI 降级 JsonlMemory"; return 0; }
+    cmake --build "$mr_build" -j"${AIRY_BUILD_JOBS}" 2>&1 | tail -5 \
+        || { log_warn "memoryrovol OSS 构建失败，TUI 降级 JsonlMemory"; return 0; }
+    local oss_lib="$mr_build/src/libagentrt_memoryrovol.a"
+    if [ -f "$oss_lib" ]; then
+        cp -f "$oss_lib" "${AIRY_HOME}/lib/libagentrt_memoryrovol_oss.a"
+        log_ok "MemoryRovol OSS 库就位: ${AIRY_HOME}/lib/libagentrt_memoryrovol_oss.a"
+    else
+        log_warn "OSS 库产物缺失（${oss_lib}），TUI 降级 JsonlMemory"
+    fi
+}
+
 # ─── Rust TUI 构建（源码模式附带） ─────────────────────────────────────
 build_tui() {
     [ -d "${AIRY_SRC_DIR}/sdk/tui" ] || return 0
+    # AIRY_HOME 需 export 给 cargo 子进程：TUI build.rs 据此定位
+    # $AIRY_HOME/lib/libagentrt_memoryrovol.a（TUI memoryrovol 全功能链接）。
+    export AIRY_HOME
     if ! command -v cargo >/dev/null 2>&1 && [ -x "$HOME/.cargo/bin/cargo" ]; then
         export PATH="$HOME/.cargo/bin:$PATH"
     fi
@@ -576,6 +604,7 @@ main() {
         if [ "${AIRY_NO_BUILD:-}" != "1" ]; then
             build_and_install
             install_python_deps
+            build_mr_oss
             build_tui
         fi
     fi
