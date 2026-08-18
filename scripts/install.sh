@@ -306,10 +306,13 @@ build_tui() {
         export PATH="$HOME/.cargo/bin:$PATH"
     fi
     command -v cargo >/dev/null 2>&1 || { log_warn "cargo 不可用，跳过 agentrt-tui"; return 0; }
-    log_info "构建 agentrt-tui（Rust TUI）…"
+    # 构建产物收敛（铁律 4.7）：CARGO_TARGET_DIR 重定向到 $AIRY_HOME/target，
+    # 禁止 cargo 在源码树 sdk/tui/target 落盘（曾有 1.7G 泄漏）。
+    export CARGO_TARGET_DIR="${AIRY_HOME}/target"
+    log_info "构建 agentrt-tui（Rust TUI，产物 → ${CARGO_TARGET_DIR}）…"
     ( cd "${AIRY_SRC_DIR}/sdk/tui" && cargo build --release ) 2>/dev/null || { log_warn "TUI 构建失败，跳过"; return 0; }
-    [ -f "${AIRY_SRC_DIR}/sdk/tui/target/release/agentrt-tui" ] && \
-        cp -f "${AIRY_SRC_DIR}/sdk/tui/target/release/agentrt-tui" "${AIRY_HOME}/bin/agentrt-tui"
+    [ -f "${CARGO_TARGET_DIR}/release/agentrt-tui" ] && \
+        cp -f "${CARGO_TARGET_DIR}/release/agentrt-tui" "${AIRY_HOME}/bin/agentrt-tui"
     log_ok "agentrt-tui 部署完成"
 }
 
@@ -410,6 +413,9 @@ export AIRY_LOG_DIR="\${AIRY_LOG_DIR:-\$AIRY_HOME/logs}"
 export AIRY_CONFIG_DIR="\${AIRY_CONFIG_DIR:-\$AIRY_HOME/config}"
 export AIRY_BIN_DIR="\${AIRY_BIN_DIR:-\$AIRY_HOME/bin}"
 export AIRY_LIB_DIR="\${AIRY_LIB_DIR:-\$AIRY_HOME/lib}"
+# Python 字节码缓存收敛：editable 安装的包源码位于源码区，PYTHONPYCACHEPREFIX
+# 将所有 __pycache__ 重定向到 $AIRY_HOME/cache/pycache，禁止落盘源码区。
+export PYTHONPYCACHEPREFIX="\${PYTHONPYCACHEPREFIX:-\$AIRY_HOME/cache/pycache}"
 # Agent 工具 ACL 预授权（fail-closed：无此变量时 agent 工具全部拒绝）。
 # 与 agentrt-bootstrap.sh 保持一致；用户可显式覆盖收紧。
 AIRY_AGENT_ACL_TOOLS="fs_read,fs_write,fs_list,fs_glob,fs_grep,fs_edit,fs_delete,shell_run,web_search,web_fetch,git_diff,git_exec,git_apply"
