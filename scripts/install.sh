@@ -444,16 +444,10 @@ export AIRY_LIB_DIR="\${AIRY_LIB_DIR:-\$AIRY_HOME/lib}"
 # Python 字节码缓存收敛：editable 安装的包源码位于源码区，PYTHONPYCACHEPREFIX
 # 将所有 __pycache__ 重定向到 $AIRY_HOME/cache/pycache，禁止落盘源码区。
 export PYTHONPYCACHEPREFIX="\${PYTHONPYCACHEPREFIX:-\$AIRY_HOME/cache/pycache}"
-# Agent 工具 ACL 预授权（fail-closed：无此变量时 agent 工具全部拒绝）。
-# 与 agentrt-bootstrap.sh 保持一致；用户可显式覆盖收紧。
-AIRY_AGENT_ACL_TOOLS="fs_read,fs_write,fs_list,fs_glob,fs_grep,fs_edit,fs_delete,shell_run,web_search,web_fetch,git_diff,git_exec,git_apply"
-AIRY_AGENT_ACL_DEFAULT=""
-for _AGENT in coding_v1 devops_v1 backend_v1 frontend_v1 tester_v1 architect_v1 \
-              product_manager_v1 data_engineer_v1 security_v1 reviewer_v1 analyst_v1; do
-    AIRY_AGENT_ACL_DEFAULT="\${AIRY_AGENT_ACL_DEFAULT:+\${AIRY_AGENT_ACL_DEFAULT};}\${_AGENT}=\${AIRY_AGENT_ACL_TOOLS}"
-done
-export AIRY_AGENT_ACL="\${AIRY_AGENT_ACL:-\${AIRY_AGENT_ACL_DEFAULT}}"
-unset AIRY_AGENT_ACL_TOOLS AIRY_AGENT_ACL_DEFAULT _AGENT
+# Agent 工具 ACL：默认不设（fail-closed，以 $AIRY_CONFIG_DIR/permission_rules.yaml
+# 为唯一权威源，按角色最小权限授权）。高级部署可显式覆盖收紧，如
+# AIRY_AGENT_ACL="coding_v1=fs_read,fs_glob"。
+export AIRY_AGENT_ACL="\${AIRY_AGENT_ACL:-}"
 export PATH="\${AIRY_HOME}/bin:\$PATH"
 EOF
     chmod 700 "${AIRY_HOME}/bin/agentrt-env.sh"
