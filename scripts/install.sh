@@ -435,7 +435,12 @@ finalize_install() {
     cat > "${AIRY_HOME}/bin/agentrt-env.sh" <<EOF
 #!/bin/sh
 # AgentRT 运行环境（由 install.sh 生成，source 使用）
-export AIRY_HOME="${AIRY_HOME}"
+# AIRY_HOME 以调用方显式设置优先（隔离测试/多实例/--prefix 自定义安装），
+# 缺省回退安装时固化值；无条件 export 会覆盖显式设置，导致 daemon 群与
+# 调用方等待探测的 socket 目录分叉（历史故障：socket 未就绪 + 第二实例
+# 抢占生产 socket）。
+AIRY_HOME="\${AIRY_HOME:-${AIRY_HOME}}"
+export AIRY_HOME
 export AIRY_RUNTIME_DIR="\${AIRY_RUNTIME_DIR:-\$AIRY_HOME/run}"
 export AIRY_LOG_DIR="\${AIRY_LOG_DIR:-\$AIRY_HOME/logs}"
 export AIRY_CONFIG_DIR="\${AIRY_CONFIG_DIR:-\$AIRY_HOME/config}"
