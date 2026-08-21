@@ -54,20 +54,20 @@ jobs:
             libsqlite3-dev libcjson-dev libyaml-dev libcurl4-openssl-dev \
             libssl-dev zlib1g-dev libzstd-dev \
             libmicrohttpd-dev libwebsockets-dev libevent-dev \
-            python3 python3-pip
+            libnghttp2-dev python3 python3-pip
 
       - name: Install build dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
           brew install cmake ninja pkgconf sqlite cjson libyaml curl openssl zlib zstd \
-            libmicrohttpd libwebsockets libevent
+            libmicrohttpd libwebsockets libevent nghttp2
 
       - name: Install build dependencies (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           # vcpkg 包名：curl（非 libcurl）、libmicrohttpd/libwebsockets（带 lib- 前缀）
-          vcpkg install sqlite3 cjson libyaml curl openssl zlib libmicrohttpd libwebsockets libevent --triplet x64-windows
+          vcpkg install sqlite3 cjson libyaml curl openssl zlib libmicrohttpd libwebsockets libevent nghttp2 --triplet x64-windows
 
       - name: Configure (Linux)
         if: runner.os == 'Linux'
@@ -159,9 +159,64 @@ jobs:
           path: ${{ env.artifact_name }}.*
           if-no-files-found: error
 
+  # RISC-V (linux-riscv64)：标准 runner 无 riscv64 第三方库（libcurl 等），
+  # 经 Docker buildx + qemu 多架构容器构建（ubuntu:24.04 riscv64 镜像）。
+  build-riscv64:
+    runs-on: ubuntu-latest
+    env:
+      BUILD_DIR: build
+      STAGE_DIR: stage
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 1
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build in riscv64 container
+        run: |
+          docker run --rm --platform linux/riscv64 \
+            -v "$PWD":/src -w /src ubuntu:24.04 bash -c '
+            apt-get update -qq
+            DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+              build-essential cmake ninja-build pkg-config python3 \
+              libsqlite3-dev libcjson-dev libyaml-dev libcurl4-openssl-dev \
+              libssl-dev zlib1g-dev libzstd-dev libmicrohttpd-dev \
+              libwebsockets-dev libevent-dev libnghttp2-dev >/dev/null 2>&1
+            cmake -S agentrt -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release \
+              -DBUILD_TESTS=OFF -DENABLE_SANITIZERS=OFF -DAIRY_BUILD_ALL=ON \
+              -DCMAKE_INSTALL_PREFIX="$PWD/$STAGE_DIR"
+            cmake --build "$BUILD_DIR" -j"$(nproc)"
+            cmake --install "$BUILD_DIR"
+            '
+
+      - name: Package (tar.gz)
+        run: |
+          REF="${{ github.ref_name }}"; VERSION="${REF#v}"
+          PKG_DIR="pkg/agentrt-${VERSION}"
+          mkdir -p "${PKG_DIR}/config"
+          cp -rf "${{ env.STAGE_DIR }}"/. "${PKG_DIR}/" 2>/dev/null || true
+          cp -f ecosystem/manager/configs/agentrt.yaml "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -f ecosystem/manager/model/model.yaml "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -f devtools/scripts/ops/templates/secrets.env.example "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -f devtools/scripts/ops/bin/agentrt-bootstrap.sh "${PKG_DIR}/bin/" 2>/dev/null || true
+          ARTIFACT="agentrt-${REF}-linux-riscv64"
+          tar -czf "${ARTIFACT}.tar.gz" -C pkg .
+          echo "artifact_name=${ARTIFACT}" >> "$GITHUB_ENV"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agentrt-${{ github.ref_name }}-linux-riscv64
+          path: agentrt-${{ github.ref_name }}-linux-riscv64.tar.gz
+          if-no-files-found: error
+
   # 汇聚三平台制品到 GitHub Release
   release:
-    needs: build
+    needs: [build, build-riscv64]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
