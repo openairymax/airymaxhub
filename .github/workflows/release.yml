@@ -35,6 +35,9 @@ jobs:
             platform: windows-x64
             pkg: zip
     runs-on: ${{ matrix.os }}
+    # 构建基线统一为 ubuntu:20.04（glibc 2.31），与二进制离线包一致：
+    # 产物可覆盖 Ubuntu 20.04+/Debian 11+/Pi OS Bullseye+（2020 年后系统）。
+    container: ubuntu:20.04
     env:
       BUILD_DIR: build
       STAGE_DIR: stage
@@ -45,16 +48,40 @@ jobs:
           submodules: true
           fetch-depth: 1
 
+      # 20.04 基线依赖准备：
+      #   - apt: 构建工具 + 系统库（libcurl/libwebsockets/microhttpd 等）
+      #   - pip: cmake ≥3.20（20.04 自带 3.16 不满足项目最低要求）
+      #   - 源码: cJSON 1.7.18（20.04 的 1.7.10 缺 cJSON_GetNumberValue）
+      #   - 源码: OpenSSL 3.0.17（20.04 的 libssl 1.1.1 头文件触发 AIRY
+      #     poison 编译失败，且 EOL 不再维护）
       - name: Install build dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            build-essential cmake ninja-build \
-            libsqlite3-dev libcjson-dev libyaml-dev libcurl4-openssl-dev \
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential make perl curl git ca-certificates \
+            python3 python3-pip python3-venv \
+            libsqlite3-dev libyaml-dev libcurl4-openssl-dev \
             libssl-dev zlib1g-dev libzstd-dev \
             libmicrohttpd-dev libwebsockets-dev libevent-dev \
-            libnghttp2-dev python3 python3-pip
+            libnghttp2-dev
+          pip3 install --no-cache-dir cmake ninja
+          curl -fsSL -o /tmp/cjson.tar.gz \
+            https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.18.tar.gz
+          tar -xzf /tmp/cjson.tar.gz -C /tmp
+          cmake -S /tmp/cJSON-1.7.18 -B /tmp/cjson-build \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+            -DENABLE_CJSON_TEST=OFF -DBUILD_SHARED_LIBS=ON
+          cmake --build /tmp/cjson-build --parallel
+          cmake --install /tmp/cjson-build
+          curl -fsSL -o /tmp/openssl.tar.gz \
+            https://github.com/openssl/openssl/releases/download/openssl-3.0.17/openssl-3.0.17.tar.gz
+          tar -xzf /tmp/openssl.tar.gz -C /tmp
+          (cd /tmp/openssl-3.0.17 && ./config --prefix=/usr/local \
+            --openssldir=/usr/local/ssl shared && \
+            make -j"$(nproc)" && make install_sw)
 
       - name: Install build dependencies (macOS)
         if: runner.os == 'macOS'
@@ -160,7 +187,8 @@ jobs:
           if-no-files-found: error
 
   # RISC-V (linux-riscv64)：标准 runner 无 riscv64 第三方库（libcurl 等），
-  # 经 Docker buildx + qemu 多架构容器构建（ubuntu:24.04 riscv64 镜像）。
+  # 经 Docker buildx + qemu 多架构容器构建（ubuntu:20.04 riscv64 镜像，
+  # 与 x86_64/arm64 统一 glibc 2.31 基线）。
   build-riscv64:
     runs-on: ubuntu-latest
     env:
@@ -179,13 +207,30 @@ jobs:
       - name: Build in riscv64 container
         run: |
           docker run --rm --platform linux/riscv64 \
-            -v "$PWD":/src -w /src ubuntu:24.04 bash -c '
+            -v "$PWD":/src -w /src ubuntu:20.04 bash -c '
+            export DEBIAN_FRONTEND=noninteractive
             apt-get update -qq
-            DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
-              build-essential cmake ninja-build pkg-config python3 \
-              libsqlite3-dev libcjson-dev libyaml-dev libcurl4-openssl-dev \
+            apt-get install -y -qq \
+              build-essential make perl curl python3 python3-pip \
+              libsqlite3-dev libyaml-dev libcurl4-openssl-dev \
               libssl-dev zlib1g-dev libzstd-dev libmicrohttpd-dev \
-              libwebsockets-dev libevent-dev libnghttp2-dev >/dev/null 2>&1
+              libwebsockets-dev libevent-dev libnghttp2-dev
+            pip3 install --no-cache-dir cmake ninja
+            curl -fsSL -o /tmp/cjson.tar.gz \
+              https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.18.tar.gz
+            tar -xzf /tmp/cjson.tar.gz -C /tmp
+            cmake -S /tmp/cJSON-1.7.18 -B /tmp/cjson-build \
+              -DCMAKE_INSTALL_PREFIX=/usr/local \
+              -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+              -DENABLE_CJSON_TEST=OFF -DBUILD_SHARED_LIBS=ON
+            cmake --build /tmp/cjson-build --parallel
+            cmake --install /tmp/cjson-build
+            curl -fsSL -o /tmp/openssl.tar.gz \
+              https://github.com/openssl/openssl/releases/download/openssl-3.0.17/openssl-3.0.17.tar.gz
+            tar -xzf /tmp/openssl.tar.gz -C /tmp
+            (cd /tmp/openssl-3.0.17 && ./config --prefix=/usr/local \
+              --openssldir=/usr/local/ssl shared && \
+              make -j"$(nproc)" && make install_sw)
             cmake -S agentrt -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release \
               -DBUILD_TESTS=OFF -DENABLE_SANITIZERS=OFF -DAIRY_BUILD_ALL=ON \
               -DCMAKE_INSTALL_PREFIX="$PWD/$STAGE_DIR"
