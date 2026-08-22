@@ -69,7 +69,7 @@ The five layers, in order of increasing restrictiveness, are:
 
   L4. KERNEL LAYER (Linux kernel compatible)
       ---------------------------------------
-      Path:       agentrt-linux/kernel/
+      Path:       agent-linux/kernel/
       License:    GNU General Public License v2 only
       SPDX:       GPL-2.0-only
       Purpose:    Kernel-space code derived from or interoperating with
@@ -104,17 +104,17 @@ For a quick reference, see the table below:
   ------+------------------------------------------------------------+---------------------------
   L1    | docs/OpenStandards/LICENSE                                 | CC-BY-4.0
   L2    | docs/LICENSE                                               | CC-BY-NC-4.0
-  L3    | agentrt/LICENSE, agentrt/{atoms,commons,cupolas,daemons,   | AGPL-3.0-or-later
+  L3    | agent-runtim/agentrt/LICENSE, agent-runtim/agentrt/{atoms,commons,cupolas,daemons,   | AGPL-3.0-or-later
         |   gateway,heapstore,protocols}/LICENSE,                     |   OR Apache-2.0
-        | sdk/LICENSE, sdk/{cli,sdk-go,sdk-python,sdk-rust,          |
+        | agent-runtim/sdk/LICENSE, agent-runtim/sdk/{cli,sdk-go,sdk-python,sdk-rust,          |
         |   sdk-typescript,tui}/LICENSE,                             |
-        | ecosystem/LICENSE, ecosystem/{examples,manager,openlab,     |
+        | agent-runtim/ecosystem/LICENSE, agent-runtim/ecosystem/{examples,manager,openlab,    |
         |   prompts,skills}/LICENSE,                                 |
-        | products/{docker,desktop}/LICENSE,                         |
-        | agentrt-linux/LICENSE, agentrt-linux/{cloudnative,cognition,|
+        | agent-runtim/products/{docker,desktop}/LICENSE,            |
+        | agent-linux/LICENSE, agent-linux/{cloudnative,cognition,   |
         |   memory,security,services,system,tests-linux}/LICENSE,    |
         | devtools/LICENSE                                            |
-  L4    | agentrt-linux/kernel/LICENSE                                | GPL-2.0-only
+  L4    | agent-linux/kernel/LICENSE                                | GPL-2.0-only
   L5    | products/memoryrovol/LICENSE                               | LicenseRef-SPHARX-...
   ROOT  | airymaxhub/LICENSE  (this file)                            | Overview (see policy)
 
@@ -145,7 +145,7 @@ THIRD-PARTY COMPONENTS NOTICE
 This product may include third-party open source software components,
 including but not limited to:
 
-  - Linux kernel (GPL-2.0-only) — see agentrt-linux/kernel/COPYING
+  - Linux kernel (GPL-2.0-only) — see agent-linux/kernel/COPYING
   - Various open-source libraries under their respective licenses
 
 Each third-party component is distributed under its own original open
