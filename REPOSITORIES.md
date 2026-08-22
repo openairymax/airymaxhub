@@ -29,7 +29,9 @@ airymaxhub/                                   # 伞仓（git@atomgit.com:openair
 │   ├── daemons/     [叶子仓]
 │   ├── gateway/     [叶子仓]
 │   ├── heapstore/   [叶子仓]                  # 内存引擎
-│   └── protocols/   [叶子仓]
+│   ├── protocols/   [叶子仓]
+│   ├── cmake/       [直属目录]                # 构建系统模块（v0.1.2 起自伞仓迁入，IRON-9 [IND] 独立层）
+│   └── scripts/     [直属目录]                # 官方安装器 install.sh/install.ps1（v0.1.2 起自伞仓迁入）
 │
 ├── agentrt-linux/   [管理仓] → agentrt-linux.git   # AirymaxOS 智能体操作系统（与 agentrt 同级）
 │   ├── kernel/              [叶子仓]                # Linux 6.6 + sched_tac + eBPF + io_uring + Rust
@@ -65,6 +67,11 @@ airymaxhub/                                   # 伞仓（git@atomgit.com:openair
 ├── docs/            [顶层仓] → docs.git
 └── docs-closed/     [顶层仓] → docs-closed.git
 ```
+
+> **伞仓直属目录说明**：伞仓根不含直属源码目录。构建系统模块（`cmake/`）与官方
+> 安装器（`scripts/`）自 v0.1.2 起迁入 agentrt 管理仓——构建系统与安装器属
+> IRON-9 四层共享模型 [IND] 完全独立层，agentrt（用户态）与 agentrt-linux
+> （内核态）各自独立，不再共享伞仓直属基础设施。
 
 ## 3. `.gitmodules` 文件清单
 
