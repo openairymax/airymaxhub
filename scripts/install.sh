@@ -28,10 +28,14 @@
 #   AIRY_HOME / AIRY_VERSION / AIRY_REPO_URL / AIRY_BUILD_JOBS
 #   AIRY_RELEASE_URL / AIRY_NO_BUILD / AIRY_MODE(auto|binary|hybrid|source)
 #   AIRY_ATOMS_PREBUILT_URL / AIRY_MEMORYROVOL_PREBUILT_URL（闭源预编译包直链）
+# 硬件自适应（2.3.5/2.3.6）：安装即按架构/内存/CPU/加速器裁剪运行画像
+#   （full/minimal，固化到 config/profile.env）；AIRY_RELEASE_URL 支持
+#   {arch} 占位符按当前架构选择预编译包；airymaxrt monitor 常驻检测
+#   外设增强（内存扩容/插卡）后自动恢复被裁剪的功能 daemon。
 #
 # 参数：
 #   --prefix <path>  --mode <auto|binary|hybrid|source>  --bin-dir <path>
-#   --uninstall [--keep-data] [--yes]  --help
+#   --profile <full|minimal|auto>  --uninstall [--keep-data] [--yes]  --help
 #
 # 安装完成后：固化 install.env（含 AIRY_BIN_LINK）、生成 agentrt-env.sh、
 # 软链 airymaxrt 启动器到 PATH（任意路径输入 airymaxrt 即启动），
@@ -62,6 +66,7 @@ AIRY_BUILD_JOBS="${AIRY_BUILD_JOBS:-$(nproc 2>/dev/null || echo 4)}"
 AIRY_MODE="${AIRY_MODE:-auto}"
 BIN_DIR="${BIN_DIR:-$HOME/.local/bin}"
 UNINSTALL=0; KEEP_DATA=0; YES=0
+AIRY_PROFILE="${AIRY_PROFILE:-auto}"
 
 AIRY_SRC_DIR="${AIRY_HOME}/src/airymaxhub"
 MODULES_DIR="${AIRY_HOME}/modules"
@@ -77,6 +82,7 @@ while [ $# -gt 0 ]; do
         --prefix)    AIRY_HOME="$2"; shift 2 ;;
         --mode)      AIRY_MODE="$2"; shift 2 ;;
         --bin-dir)   BIN_DIR="$2"; shift 2 ;;
+        --profile)   AIRY_PROFILE="$2"; shift 2 ;;
         --uninstall) UNINSTALL=1; shift ;;
         --keep-data) KEEP_DATA=1; shift ;;
         --yes)       YES=1; shift ;;
@@ -86,7 +92,7 @@ while [ $# -gt 0 ]; do
 done
 
 case "$AIRY_MODE" in auto|binary|hybrid|source) ;; *) log_err "非法 --mode: ${AIRY_MODE}"; exit 1 ;; esac
-AIRY_SRC_DIR="${AIRY_HOME}/src/airymaxhub"
+case "$AIRY_PROFILE" in auto|full|minimal) ;; *) log_err "非法 --profile: ${AIRY_PROFILE}（支持 full|minimal|auto）"; exit 1 ;; esac
 
 # ─── 工具链检测 ──────────────────────────────────────────────────────────
 require_cmd() {
@@ -177,12 +183,33 @@ do_uninstall() {
 }
 
 # ─── 方式 A：完全体二进制 tarball（优先） ───────────────────────────────
+# 硬件自适应（2.3.5）：预编译包按架构分发——AIRY_RELEASE_URL 支持 {arch}
+# 占位符（自动替换为当前架构，如 .../agentrt-v0.1.2-linux-{arch}.tar.gz）；
+# 架构不在预编译支持清单时告警并回退源码构建，避免跨架构运行错乱。
 install_binary() {
-    local url="$1"
+    local url="$1" arch
     local tarball="${AIRY_HOME}/tmp/agentrt-${AIRY_VERSION}.tar.gz"
+    arch="$(detect_arch)"
+    log_info "硬件架构: ${arch}（预编译支持: ${SUPPORTED_ARCHS}）"
+    case " ${SUPPORTED_ARCHS} " in
+        *" ${arch} "*) ;;
+        *) log_warn "架构 ${arch} 无预编译包（支持: ${SUPPORTED_ARCHS}），回退源码构建"
+           return 1 ;;
+    esac
+    # URL {arch} 占位符替换（POSIX sed，兼容 sh）
+    url="$(printf '%s' "$url" | sed "s/{arch}/${arch}/g")"
     log_info "下载完全体二进制包: ${url}"
     if ! curl -fsSL --max-time 600 -o "${tarball}" "${url}"; then
         log_warn "release 下载失败，回退源码构建"
+        rm -f "${tarball}"
+        return 1
+    fi
+    # 包内架构自校验：tarball 根含 platform-<arch> 标识文件时交叉校验，
+    # 防止下载到异架构包后静默安装（跨架构 daemon 启动即崩溃）。
+    if tar -tzf "${tarball}" 2>/dev/null | grep -q "platform-${arch}"; then
+        log_ok "二进制包架构校验通过（${arch}）"
+    elif tar -tzf "${tarball}" 2>/dev/null | grep -qE 'platform-(x86_64|aarch64|armv7l)'; then
+        log_err "二进制包架构与当前主机（${arch}）不匹配，拒绝安装"
         rm -f "${tarball}"
         return 1
     fi
@@ -412,6 +439,91 @@ init_secrets() {
     fi
 }
 
+# ─── 硬件评估与画像固化（2.3.5/2.3.6 硬件自适应裁剪） ──────────────
+# 与 airymaxrt 启动器 assess_hardware/detect_accel/detect_arch 同口径
+# （SSoT 单一判据，见 sdk/tui/scripts/airymaxrt）：
+#   minimal：MemTotal < 2.5GiB 或 MemAvailable < 1.5GiB 或 CPU 核数 < 3
+#     （端侧/低配设备：树莓派 4B 2GB 等，启动器仅拉起 llm/think/agent/tool
+#     核心 daemon，其余能力 daemon 裁剪，gateway 自动降级，避免 OOM）
+#   full：资源充足（大型服务器/个人电脑）
+# 加速器探测（nvidia-smi / rocm-smi / /dev/dri）记录到画像——为本地推理
+# 能力判定预留依据；airymaxrt monitor 在检测到外设增强（插卡/扩容）时
+# 自动恢复被裁剪 daemon（见 sdk/tui/scripts/airymaxrt）。
+# 架构检测（uname -m 归一化）：二进制模式按架构选择预编译包
+# （AIRY_RELEASE_URL 支持 {arch} 占位符），并固化到画像供后续校验。
+detect_arch() {
+    case "$(uname -m 2>/dev/null)" in
+        x86_64|amd64)     echo "x86_64" ;;
+        aarch64|arm64)    echo "aarch64" ;;
+        armv7l|armv6l|armhf) echo "armv7l" ;;
+        riscv64)          echo "riscv64" ;;
+        *)                echo "unknown" ;;
+    esac
+}
+# 预编译包支持的架构清单（binary 模式校验；其余架构回退源码构建）
+SUPPORTED_ARCHS="x86_64 aarch64 armv7l"
+
+detect_accel() {
+    if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi -L >/dev/null 2>&1; then
+        echo "nvidia:$(nvidia-smi -L 2>/dev/null | wc -l)"
+    elif command -v rocm-smi >/dev/null 2>&1; then
+        echo "rocm"
+    elif [ -d /dev/dri ] && ls /dev/dri/renderD* >/dev/null 2>&1; then
+        echo "dri"
+    else
+        echo "none"
+    fi
+}
+
+assess_hardware() {
+    local mem_kib mem_avail_kib nproc_val accel profile
+    mem_kib="$(awk '/^MemTotal:/{print $2}' /proc/meminfo 2>/dev/null || echo 0)"
+    mem_avail_kib="$(awk '/^MemAvailable:/{print $2}' /proc/meminfo 2>/dev/null || echo "$mem_kib")"
+    nproc_val="$(nproc 2>/dev/null || echo 1)"
+    accel="$(detect_accel)"
+    if [ -n "$mem_kib" ] && [ "$mem_kib" -gt 0 ] && \
+       [ "$mem_kib" -ge $((2560 * 1024)) ] && \
+       [ "$mem_avail_kib" -ge $((1536 * 1024)) ] && \
+       [ "$nproc_val" -ge 3 ]; then
+        profile="full"
+    else
+        profile="minimal"
+    fi
+    printf '%s|%s|%s|%s|%s' "$profile" "${mem_kib:-0}" "${mem_avail_kib:-0}" "$nproc_val" "$accel"
+}
+
+# 固化运行画像到 $AIRY_HOME/config/profile.env（airymaxrt 启动器启动时
+# 优先读取，见 sdk/tui/scripts/airymaxrt PROFILE_ENV）。install.env 保持
+# 只读（安装信息），画像允许被 `airymaxrt profile` / monitor 跨会话调整。
+persist_profile() {
+    local hw hw_profile mem total avail cores accel
+    hw="$(assess_hardware)"
+    hw_profile="${hw%%|*}"
+    mem="${hw#*|}"
+    total="${mem%%|*}"; mem="${mem#*|}"
+    avail="${mem%%|*}"; mem="${mem#*|}"
+    cores="${mem%%|*}"
+    accel="${mem#*|}"
+    # auto 画像以硬件评估为准；显式 --profile 尊重用户选择
+    if [ "$AIRY_PROFILE" != "auto" ]; then
+        hw_profile="$AIRY_PROFILE"
+    fi
+    mkdir -p "${AIRY_HOME}/config"
+    {
+        echo "# AgentRT 运行画像（由 install.sh 生成，airymaxrt 启动器读取）"
+        echo "AIRY_PROFILE=${hw_profile}"
+        echo "AIRY_HW_ARCH=$(detect_arch)"
+        echo "AIRY_HW_MEM_TOTAL_KIB=${total}"
+        echo "AIRY_HW_MEM_AVAIL_KIB=${avail}"
+        echo "AIRY_HW_CPU_CORES=${cores}"
+        echo "AIRY_HW_ACCEL=${accel}"
+    } > "${AIRY_HOME}/config/profile.env"
+    chmod 600 "${AIRY_HOME}/config/profile.env" 2>/dev/null || true
+    log_ok "运行画像已固化: ${hw_profile}（${AIRY_HW_ARCH:-$(detect_arch)} · 内存 ${total}KiB/可用 ${avail}KiB · CPU ${cores} 核 · 加速器 ${accel}）"
+    log_info "  硬件变化后（内存扩容/插入显卡）执行 'airymaxrt profile' 重评估，"
+    log_info "  或 'airymaxrt monitor --daemon' 后台常驻自动恢复被裁剪功能"
+}
+
 # ─── 固化安装位置 + 生成运行环境 + 启动器软链 ──────────────────────────
 finalize_install() {
     # 生成 vault 主密钥口令（AES-256-GCM 凭据加密）。随机强口令，缺失回退链：
@@ -561,6 +673,39 @@ print_summary() {
 EOF
 }
 
+# ─── PATH 引导（2026-08-22）────────────────────────────────────────────
+# 历史教训：其他设备安装后用户直接输入 airymaxrt 报 command not found——
+# ${BIN_DIR}（默认 $HOME/.local/bin）未加入 PATH，而摘要宣称"任意路径输入
+# airymaxrt 即启动"造成误导。安装收尾时必须实测 PATH 并在缺失时给出
+# 精确、可复制的引导（临时/持久/完整路径三选一）。
+print_path_guidance() {
+    _found=0
+    _ifs="$IFS"
+    IFS=:
+    for _p in $PATH; do
+        [ -n "$_p" ] || _p="."
+        if [ "$_p" = "$BIN_DIR" ]; then _found=1; break; fi
+    done
+    IFS="$_ifs"
+    [ "$_found" -eq 1 ] && return 0
+    log_warn "${BIN_DIR} 不在当前 PATH 中，无法直接输入 airymaxrt 启动。"
+    echo "  请按需选择以下任一种方式（重启终端后生效）："
+    echo "    1) 临时生效（当前终端）:"
+    echo "       export PATH=\"${BIN_DIR}:\$PATH\""
+    if [ -f "$HOME/.zshrc" ]; then
+        echo "    2) 持久生效（zsh）:"
+        echo "       echo 'export PATH=\"${BIN_DIR}:\$PATH\"' >> \"\$HOME/.zshrc\""
+    elif [ -f "$HOME/.bashrc" ]; then
+        echo "    2) 持久生效（bash）:"
+        echo "       echo 'export PATH=\"${BIN_DIR}:\$PATH\"' >> \"\$HOME/.bashrc\""
+    else
+        echo "    2) 持久生效（login shell）:"
+        echo "       echo 'export PATH=\"${BIN_DIR}:\$PATH\"' >> \"\$HOME/.profile\""
+    fi
+    echo "    3) 不改 PATH，改用完整路径启动:"
+    echo "       ${BIN_DIR}/airymaxrt"
+}
+
 # ─── 主流程 ────────────────────────────────────────────────────────────
 main() {
     print_banner
@@ -613,6 +758,11 @@ main() {
     ensure_cli_entry
     init_secrets
 
+    # 硬件评估与运行画像固化（2.3.5/2.3.6）：安装即按硬件裁剪——
+    # 二进制包同样适用（无论安装模式，自动识别硬件、固化画像；
+    # airymaxrt 启动器按画像拉起 daemon 集，monitor 监控外设增强自动恢复）。
+    persist_profile
+
     finalize_install
     if [ "$installed" -eq 0 ]; then
         verify_daemons strict
@@ -620,6 +770,7 @@ main() {
         verify_daemons
     fi
     print_summary
+    print_path_guidance
     log_ok "安装完成"
 }
 
