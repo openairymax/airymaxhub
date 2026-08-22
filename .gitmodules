@@ -1,22 +1,10 @@
-[submodule "agentrt"]
-	path = agentrt
-	url = ../agentrt.git
+[submodule "agent-runtim"]
+	path = agent-runtim
+	url = ../agent-runtim.git
 	branch = main
-[submodule "agentrt-linux"]
-	path = agentrt-linux
-	url = ../agentrt-linux.git
-	branch = main
-[submodule "sdk"]
-	path = sdk
-	url = ../sdk.git
-	branch = main
-[submodule "ecosystem"]
-	path = ecosystem
-	url = ../ecosystem.git
-	branch = main
-[submodule "products"]
-	path = products
-	url = ../products.git
+[submodule "agent-linux"]
+	path = agent-linux
+	url = ../agent-linux.git
 	branch = main
 [submodule "docs"]
 	path = docs
