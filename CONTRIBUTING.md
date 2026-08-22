@@ -3,8 +3,11 @@
 **最后更新**: 2026-08-04
 
 欢迎来到 Airymax 社区！本仓库（`airymaxhub`）是聚合伞仓（umbrella repository），
-通过 git submodule 聚合以下子仓库：`agentrt`、`agentrt-linux`、`sdk`、`ecosystem`、
-`products`、`docs`、`docs-closed`、`devtools`。
+通过 git submodule 聚合以下大管理仓（super-repo）：
+
+- **用户态**：`agent-runtim`（含 `agentrt` 核心运行时、`sdk`、`ecosystem`、`products`）
+- **内核态**：`agent-linux`（v0.1.3 由 `agentrt-linux` 改名）
+- 顶层仓：`docs`、`closed-docs`、`devtools`、`closed-dev-build`
 
 大部分开发工作发生在各个子仓库（leaf repository）中。请先阅读对应子仓库内的
 `CONTRIBUTING.md`（如有）以获得该仓库的具体约定。
@@ -38,8 +41,8 @@ of Origin 1.1（https://developercertificate.org/）。
 
 ## 4. 双许可与版权
 
-对**开源核心层（L3）**（`agentrt/`、`sdk/`、`ecosystem/`、`products/docker/`、
-`products/desktop/`、`agentrt-linux/` 非内核部分、`devtools/`、`cmake/`）的贡献，
+对**开源核心层（L3）**（`agent-runtim/` 下的 `agentrt/`、`sdk/`、`ecosystem/`、
+`products/docker/`、`products/desktop/`、`agent-linux/` 非内核部分、`devtools/`）的贡献，
 将被视为以 **AGPL-3.0-or-later OR Apache-2.0** 双许可接受（SPDX: `AGPL-3.0-or-later
 OR Apache-2.0`）。请在新增/修改的文件中保留 SPDX 头：
 
@@ -50,7 +53,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later OR Apache-2.0
 
 ## 5. 特殊子仓库
 
-- **`agentrt-linux/kernel/`**（L4）：必须使用 `GPL-2.0-only` 以保持与上游 Linux
+- **`agent-linux/kernel/`**（L4）：必须使用 `GPL-2.0-only` 以保持与上游 Linux
   内核的许可兼容性。
 - **`products/memoryrovol/`**（L5）：闭源商业产品，受 SPHARX 商业 EULA 约束，
   不接受外部源码贡献。商业合作请联系 business@spharx.cn。

@@ -15,8 +15,8 @@ Two co-designed systems, operating at different layers of the stack:
 
 The `airymaxhub` umbrella repo:
 
-- **user mode** → `agentrt` &nbsp; [AirymaxRT Runtime]
-- **kernel mode** → `agentrt-linux` &nbsp; [AirymaxOS Distribution]
+- **user mode** → `agent-runtim` &nbsp; [AirymaxRT user-space engineering super-repo: agentrt core runtime + sdk + ecosystem + products]
+- **kernel mode** → `agent-linux` &nbsp; [AirymaxOS Distribution; renamed from `agentrt-linux` in v0.1.3]
 
 > OpenAirymax uses a multi-repo hierarchy. For the full submodule layout, URL conventions, and branching strategy, see [REPOSITORIES.md](REPOSITORIES.md).
 
