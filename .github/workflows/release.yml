@@ -19,7 +19,7 @@ jobs:
   # agentrt-<version>-<os>-<arch>.{tar.gz,zip}，结构对齐 install.sh 二进制
   # 模式（解压后 bin/ 直接可用）。制品命名规范：
   #   agentrt-<v版本>-<os>-<arch>（如 agentrt-v0.1.2-linux-x86_64.tar.gz）
-  # 与 devtools/scripts/ci/release/package-full-release.sh 完全体包命名对齐，
+  # 与 tools/scripts/ci/release/package-full-release.sh 完全体包命名对齐，
   # 默认承载 atomgit，GitHub Release 为镜像。
   build:
     strategy:
@@ -138,13 +138,13 @@ jobs:
           cmake --install ${{ env.BUILD_DIR }} --config Release
 
       # install.sh 二进制模式依赖 bin/agentrt-bootstrap.sh（daemon 编排脚本），
-      # 但其位于 devtools 子仓（非 agentrt 树），cmake --install 不会带入，
+      # 但其位于 tools 子仓（原 devtools，非 agentrt 树），cmake --install 不会带入，
       # 必须在此显式部署，否则二进制安装后 daemon 无法一键启动编排。
       - name: Deploy bootstrap script (tar.gz platforms)
         if: runner.os != 'Windows'
         run: |
-          if [ -f "devtools/scripts/ops/bin/agentrt-bootstrap.sh" ]; then
-            cp -f "devtools/scripts/ops/bin/agentrt-bootstrap.sh" "${{ env.STAGE_DIR }}/bin/agentrt-bootstrap.sh"
+          if [ -f "tools/scripts/ops/bin/agentrt-bootstrap.sh" ]; then
+            cp -f "tools/scripts/ops/bin/agentrt-bootstrap.sh" "${{ env.STAGE_DIR }}/bin/agentrt-bootstrap.sh"
             chmod 755 "${{ env.STAGE_DIR }}/bin/agentrt-bootstrap.sh"
           fi
 
@@ -162,7 +162,7 @@ jobs:
           cp -rf "${{ env.STAGE_DIR }}"/. "${PKG_DIR}/"
           cp -f ecosystem/manager/configs/agentrt.yaml "${PKG_DIR}/config/" 2>/dev/null || true
           cp -f ecosystem/manager/model/model.yaml "${PKG_DIR}/config/" 2>/dev/null || true
-          cp -f devtools/scripts/ops/templates/secrets.env.example "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -f tools/scripts/ops/templates/secrets.env.example "${PKG_DIR}/config/" 2>/dev/null || true
           ARTIFACT="agentrt-${REF}-${{ matrix.platform }}"
           tar -czf "${ARTIFACT}.tar.gz" -C pkg .
           echo "artifact_name=${ARTIFACT}" >> "$GITHUB_ENV"
@@ -246,8 +246,8 @@ jobs:
           cp -rf "${{ env.STAGE_DIR }}"/. "${PKG_DIR}/" 2>/dev/null || true
           cp -f ecosystem/manager/configs/agentrt.yaml "${PKG_DIR}/config/" 2>/dev/null || true
           cp -f ecosystem/manager/model/model.yaml "${PKG_DIR}/config/" 2>/dev/null || true
-          cp -f devtools/scripts/ops/templates/secrets.env.example "${PKG_DIR}/config/" 2>/dev/null || true
-          cp -f devtools/scripts/ops/bin/agentrt-bootstrap.sh "${PKG_DIR}/bin/" 2>/dev/null || true
+          cp -f tools/scripts/ops/templates/secrets.env.example "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -f tools/scripts/ops/bin/agentrt-bootstrap.sh "${PKG_DIR}/bin/" 2>/dev/null || true
           ARTIFACT="agentrt-${REF}-linux-riscv64"
           tar -czf "${ARTIFACT}.tar.gz" -C pkg .
           echo "artifact_name=${ARTIFACT}" >> "$GITHUB_ENV"

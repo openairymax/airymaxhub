@@ -5,9 +5,9 @@
 欢迎来到 Airymax 社区！本仓库（`airymaxhub`）是聚合伞仓（umbrella repository），
 通过 git submodule 聚合以下大管理仓（super-repo）：
 
-- **用户态**：`agent-runtim`（含 `agentrt` 核心运行时、`sdk`、`ecosystem`、`products`）
+- **用户态**：`agent-workload`（v0.1.4 由 `agent-runtim` 改名；含 `agentrt` 核心运行时、`sdk`、`ecosystem`、`products`）
 - **内核态**：`agent-linux`（v0.1.3 由 `agentrt-linux` 改名）
-- 顶层仓：`docs`、`closed-docs`、`devtools`、`closed-dev-build`
+- 顶层仓：`docs`、`closed-docs`、`tools`（v0.1.4 由 `devtools` 改名）、`closed-dev-build`
 
 大部分开发工作发生在各个子仓库（leaf repository）中。请先阅读对应子仓库内的
 `CONTRIBUTING.md`（如有）以获得该仓库的具体约定。
@@ -41,8 +41,8 @@ of Origin 1.1（https://developercertificate.org/）。
 
 ## 4. 双许可与版权
 
-对**开源核心层（L3）**（`agent-runtim/` 下的 `agentrt/`、`sdk/`、`ecosystem/`、
-`products/docker/`、`products/desktop/`、`agent-linux/` 非内核部分、`devtools/`）的贡献，
+对**开源核心层（L3）**（`agent-workload/` 下的 `agentrt/`、`sdk/`、`ecosystem/`、
+`products/docker/`、`products/desktop/`、`agent-linux/` 非内核部分、`tools/`）的贡献，
 将被视为以 **AGPL-3.0-or-later OR Apache-2.0** 双许可接受（SPDX: `AGPL-3.0-or-later
 OR Apache-2.0`）。请在新增/修改的文件中保留 SPDX 头：
 

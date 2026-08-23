@@ -15,7 +15,7 @@ OpenAirymax 开放两个同源但不同层级的项目：
 
 airymaxhub 伞仓：
 
-- user mode：agent-runtim 「AirymaxRT 用户态工程」大管理仓（含 agentrt 核心运行时 / sdk / ecosystem / products）
+- user mode：agent-workload 「AirymaxRT 用户态工程」大管理仓（v0.1.4 由 agent-runtim 改名，含 agentrt 核心运行时 / sdk / ecosystem / products）
 - kernel mode：agent-linux 「AirymaxOS 智能体操作系统」大管理仓（v0.1.3 由 agentrt-linux 改名）
 
 > OpenAirymax 采用多仓层级组织,完整的子模块结构、URL 约定与分支策略详见 [REPOSITORIES.md](REPOSITORIES.md)。

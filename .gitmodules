@@ -1,6 +1,6 @@
-[submodule "agent-runtim"]
-	path = agent-runtim
-	url = ../agent-runtim.git
+[submodule "agent-workload"]
+	path = agent-workload
+	url = ../agent-workload.git
 	branch = main
 [submodule "agent-linux"]
 	path = agent-linux
@@ -15,9 +15,9 @@
         url = https://atomgit.com/openairymax/closed-docs.git
         branch = main
         update = none
-[submodule "devtools"]
-	path = devtools
-	url = ../devtools.git
+[submodule "tools"]
+	path = tools
+	url = ../tools.git
 	branch = main
 [submodule "closed-dev-build"]
 	path = closed-dev-build
