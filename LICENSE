@@ -58,8 +58,8 @@ The five layers, in order of increasing restrictiveness, are:
                   ecosystem/               (6 sub-repos)
                   products/docker/         (container deployment)
                   products/desktop/        (desktop client)
-                  agentrt-linux/           (8 sub-repos, EXCLUDING kernel)
-                  devtools/
+                  agent-linux/           (8 sub-repos, EXCLUDING kernel)
+                  tools/
                   cmake/
       License:    AGPL v3 + Apache 2.0 (dual license)
       SPDX:       AGPL-3.0-or-later OR Apache-2.0
@@ -104,16 +104,16 @@ For a quick reference, see the table below:
   ------+------------------------------------------------------------+---------------------------
   L1    | docs/OpenStandards/LICENSE                                 | CC-BY-4.0
   L2    | docs/LICENSE                                               | CC-BY-NC-4.0
-  L3    | agent-runtim/agentrt/LICENSE, agent-runtim/agentrt/{atoms,commons,cupolas,daemons,   | AGPL-3.0-or-later
+  L3    | agent-workload/agentrt/LICENSE, agent-workload/agentrt/{atoms,commons,cupolas,daemons,   | AGPL-3.0-or-later
         |   gateway,heapstore,protocols}/LICENSE,                     |   OR Apache-2.0
-        | agent-runtim/sdk/LICENSE, agent-runtim/sdk/{cli,sdk-go,sdk-python,sdk-rust,          |
-        |   sdk-typescript,tui}/LICENSE,                             |
-        | agent-runtim/ecosystem/LICENSE, agent-runtim/ecosystem/{examples,manager,openlab,    |
-        |   prompts,skills}/LICENSE,                                 |
-        | agent-runtim/products/{docker,desktop}/LICENSE,            |
+        | agent-workload/sdk/LICENSE, agent-workload/sdk/{cli,sdk-go,sdk-python,sdk-rust,          |
+        |   sdk-typescript,tui}/LICENSE,                              |
+        | agent-workload/ecosystem/LICENSE, agent-workload/ecosystem/{examples,manager,openlab,    |
+        |   prompts,skills}/LICENSE,                                  |
+        | agent-workload/products/{docker,desktop}/LICENSE,           |
         | agent-linux/LICENSE, agent-linux/{cloudnative,cognition,   |
         |   memory,security,services,system,tests-linux}/LICENSE,    |
-        | devtools/LICENSE                                            |
+        | tools/LICENSE                                               |
   L4    | agent-linux/kernel/LICENSE                                | GPL-2.0-only
   L5    | products/memoryrovol/LICENSE                               | LicenseRef-SPHARX-...
   ROOT  | airymaxhub/LICENSE  (this file)                            | Overview (see policy)

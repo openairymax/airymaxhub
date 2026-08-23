@@ -1,7 +1,7 @@
 # 仓库结构与子模块文档（REPOSITORIES.md）
 
 > 本文件是 OpenAirymax 全部 38 个 git 仓库的权威索引，记录 `.gitmodules` 层次、URL 约定与分支策略。
-> 最后更新：2026-08-23（v0.1.3 双工程结构）· 维护者：SPHARX Ltd.
+> 最后更新：2026-08-23（v0.1.4 双工程结构 + 用户态仓更名）· 维护者：SPHARX Ltd.
 
 ---
 
@@ -12,14 +12,14 @@ OpenAirymax 采用 **伞仓 + 双工程大管理仓 + 管理仓 + 叶子仓 + �
 | 层级 | 数量 | 说明 |
 |------|------|------|
 | 伞仓（umbrella） | 1 | `airymaxhub`，聚合 6 个管理仓 |
-| 大管理仓（super-management） | 2 | `agent-runtim`（用户态工程）/ `agent-linux`（内核态工程，原 agentrt-linux），各自通过 `.gitmodules` 管理其下管理仓/叶子仓 |
-| 管理仓（management） | 4 | `agentrt` / `sdk` / `ecosystem` / `products`，位于 agent-runtim 下，各自通过 `.gitmodules` 管理叶子仓 |
+| 大管理仓（super-management） | 2 | `agent-workload`（用户态工程，v0.1.4 由 agent-runtim 改名）/ `agent-linux`（内核态工程，原 agentrt-linux），各自通过 `.gitmodules` 管理其下管理仓/叶子仓 |
+| 管理仓（management） | 4 | `agentrt` / `sdk` / `ecosystem` / `products`，位于 agent-workload 下，各自通过 `.gitmodules` 管理叶子仓 |
 | 叶子仓（leaf） | 29 | 分布在 4 个管理仓下（7 + 6 + 6 + 3）与 agent-linux 下（8） |
-| 顶层仓（top-level） | 4 | `devtools` / `docs` / `closed-docs` / `closed-dev-build`，直属伞仓 |
+| 顶层仓（top-level） | 4 | `tools`（v0.1.4 由 devtools 改名）/ `docs` / `closed-docs` / `closed-dev-build`，直属伞仓 |
 | **合计** | **38** | — |
 
-> **双工程结构（v0.1.3 决策）**：区分用户态工程与内核态工程——
-> - **agent-runtim**（用户态）：agentrt（核心运行时）+ ecosystem（生态）+ products（产品）+ sdk（开发者 SDK）
+> **双工程结构（v0.1.3 决策，v0.1.4 更名）**：区分用户态工程与内核态工程——
+> - **agent-workload**（用户态）：agentrt（核心运行时）+ ecosystem（生态）+ products（产品）+ sdk（开发者 SDK）
 > - **agent-linux**（内核态）：AirymaxOS 智能体操作系统（kernel + services + system + cloudnative 等 8 叶子仓）
 > 两者构建层面零互相引用，通过 IRON-9 共享契约层（[SC] 字节级一致）与语义同源层（[SS]）协作。
 
@@ -28,7 +28,7 @@ OpenAirymax 采用 **伞仓 + 双工程大管理仓 + 管理仓 + 叶子仓 + �
 ```
 airymaxhub/                                     # 伞仓（git@atomgit.com:openairymax/airymaxhub.git, main）
 │
-├── agent-runtim/    [大管理仓] → agent-runtim.git   # 用户态工程（v0.1.3 起）
+├── agent-workload/ [大管理仓] → agent-workload.git  # 用户态工程（v0.1.3 起，v0.1.4 由 agent-runtim 改名）
 │   ├── agentrt/      [管理仓] → agentos.git（历史保留 URL，见 §4 E1）
 │   │   ├── atoms/       [叶子仓]                  # A 类微核心原语（corekern/syscall/memory/taskflow）
 │   │   ├── commons/     [叶子仓]
@@ -58,7 +58,7 @@ airymaxhub/                                     # 伞仓（git@atomgit.com:opena
 │   └── tests-linux/     [叶子仓]               # 单元 + 集成 + 形式化验证(seL4) + Soak + Chaos
 │
 ├── docs/            [顶层仓] → docs.git
-├── devtools/        [顶层仓] → devtools.git
+├── tools/           [顶层仓] → tools.git           # 开发工具（v0.1.4 由 devtools 改名）
 ├── closed-docs/     [顶层仓] → closed-docs.git
 └── closed-dev-build/ [顶层仓] → closed-dev-build.git
 ```
@@ -66,7 +66,7 @@ airymaxhub/                                     # 伞仓（git@atomgit.com:opena
 > **伞仓直属目录说明**：伞仓根不含直属源码目录（v0.1.3 起仅收编 6 个管理仓子模块）。
 > 构建系统模块（`cmake/`）与官方安装器（`scripts/`）自 v0.1.2 起迁入
 > agentrt 管理仓——构建系统与安装器属 IRON-9 [IND] 完全独立层，用户态
-> （agent-runtim）与内核态（agent-linux）各自独立。
+> （agent-workload）与内核态（agent-linux）各自独立。
 
 ## 3. `.gitmodules` 文件清单
 
@@ -74,15 +74,15 @@ airymaxhub/                                     # 伞仓（git@atomgit.com:opena
 
 | # | 文件路径 | 子模块数 | 子模块类型 | 说明 |
 |---|----------|----------|------------|------|
-| 1 | `airymaxhub/.gitmodules` | 6 | 大管理仓 + 顶层仓 | agent-runtim, agent-linux, docs, closed-docs, devtools, closed-dev-build |
-| 2 | `agent-runtim/.gitmodules` | 4 | 管理仓 | agentrt, ecosystem, products, sdk |
-| 3 | `agent-runtim/agentrt/.gitmodules` | 7 | 叶子仓 | atoms, commons, cupolas, daemons, gateway, heapstore, protocols |
-| 4 | `agent-runtim/agent-linux/.gitmodules` | 8 | 叶子仓 | kernel, memory, security, cognition, services, system, cloudnative, tests-linux |
-| 5 | `agent-runtim/sdk/.gitmodules` | 6 | 叶子仓 | sdk-python, sdk-go, sdk-rust, sdk-typescript, cli, tui |
-| 6 | `agent-runtim/ecosystem/.gitmodules` | 6 | 叶子仓 | manager, prompts, examples, openlab, skills, agents |
-| 7 | `agent-runtim/products/.gitmodules` | 3 | 叶子仓 | desktop, docker, memoryrovol |
+| 1 | `airymaxhub/.gitmodules` | 6 | 大管理仓 + 顶层仓 | agent-workload, agent-linux, docs, closed-docs, tools, closed-dev-build |
+| 2 | `agent-workload/.gitmodules` | 4 | 管理仓 | agentrt, ecosystem, products, sdk |
+| 3 | `agent-workload/agentrt/.gitmodules` | 7 | 叶子仓 | atoms, commons, cupolas, daemons, gateway, heapstore, protocols |
+| 4 | `agent-linux/.gitmodules` | 8 | 叶子仓 | kernel, memory, security, cognition, services, system, cloudnative, tests-linux |
+| 5 | `agent-workload/sdk/.gitmodules` | 6 | 叶子仓 | sdk-python, sdk-go, sdk-rust, sdk-typescript, cli, tui |
+| 6 | `agent-workload/ecosystem/.gitmodules` | 6 | 叶子仓 | manager, prompts, examples, openlab, skills, agents |
+| 7 | `agent-workload/products/.gitmodules` | 3 | 叶子仓 | desktop, docker, memoryrovol |
 
-> 顶层仓（devtools / docs / closed-docs / closed-dev-build）为单仓，不含 `.gitmodules`。
+> 顶层仓（tools / docs / closed-docs / closed-dev-build）为单仓，不含 `.gitmodules`。
 
 ## 4. URL 约定
 
@@ -99,20 +99,22 @@ git@atomgit.com:openairymax/<仓库名>.git
 | **E1** | `agentrt`（管理仓） | `git@atomgit.com:openairymax/agentos.git` | 历史保留：agentrt 管理仓的 git 远端名沿用改名前的 `agentos.git`，用户决策保持不变（内部代码前缀 `agentos_→agentrt_→airy_` 已完成两阶段改名，但 git remote 名保留） |
 | **E2** | `cli` / `tui`（sdk 叶子仓） | `git@atomgit.com:openairymax/cli.git` / `tui.git` | 命名约定：cli 与 tui 作为用户直接交互的独立工具，URL 不带 `sdk-` 前缀（区别于 sdk-python / sdk-go / sdk-rust / sdk-typescript 等语言绑定 SDK） |
 | **E3** | `memoryrovol`（products 叶子仓） | `git@atomgit.com:spharx/memoryrovol.git` | 组织归属：memoryrovol 归属 `spharx` 个人组织而非 `openairymax` 组织（商业隔离层，B 类语义） |
-| **E4** | `agent-linux`（大管理仓） | `git@atomgit.com:openairymax/agent-linux.git` | v0.1.3 由 `agentrt-linux` 改名；本地目录/引用已同步，远程仓改名由维护者在 atomgit 平台操作后生效 |
+| **E4** | `agent-linux`（大管理仓） | `git@atomgit.com:openairymax/agent-linux.git` | v0.1.3 由 `agentrt-linux` 改名；本地目录/引用与远程仓均已同步 |
+| **E5** | `agent-workload`（大管理仓） | `git@atomgit.com:openairymax/agent-workload.git` | v0.1.4 由 `agent-runtim` 改名；本地目录/引用与远程仓均已同步 |
+| **E6** | `tools`（顶层仓） | `git@atomgit.com:openairymax/tools.git` | v0.1.4 由 `devtools` 改名；本地目录/引用与远程仓均已同步 |
 
 ### 完整仓库 URL 表
 
 | 仓库 | 类型 | URL | 分支 |
 |------|------|-----|------|
 | airymaxhub | 伞仓 | `git@atomgit.com:openairymax/airymaxhub.git` | `main` |
-| agent-runtim | 大管理仓 | `git@atomgit.com:openairymax/agent-runtim.git` | `main` |
+| agent-workload | 大管理仓 | `git@atomgit.com:openairymax/agent-workload.git` ⚠️E5 | `main` |
 | agent-linux | 大管理仓 | `git@atomgit.com:openairymax/agent-linux.git` ⚠️E4 | `main` |
 | agentrt | 管理仓 | `git@atomgit.com:openairymax/agentos.git` ⚠️E1 | `main` |
 | sdk | 管理仓 | `git@atomgit.com:openairymax/sdk.git` | `main` |
 | ecosystem | 管理仓 | `git@atomgit.com:openairymax/ecosystem.git` | `main` |
 | products | 管理仓 | `git@atomgit.com:openairymax/products.git` | `main` |
-| devtools | 顶层仓 | `git@atomgit.com:openairymax/devtools.git` | `main` |
+| tools | 顶层仓 | `git@atomgit.com:openairymax/tools.git` ⚠️E6 | `main` |
 | docs | 顶层仓 | `git@atomgit.com:openairymax/docs.git` | `main` |
 | closed-docs | 顶层仓 | `git@atomgit.com:openairymax/closed-docs.git` | `main` |
 | closed-dev-build | 顶层仓 | `git@atomgit.com:openairymax/closed-dev-build.git` | `main` |
@@ -152,36 +154,35 @@ git@atomgit.com:openairymax/<仓库名>.git
 | 仓库类型 | 默认分支 | 说明 |
 |----------|----------|------|
 | 伞仓 | `main` | `airymaxhub` |
-| 大管理仓 | `main` | agent-runtim / agent-linux |
+| 大管理仓 | `main` | agent-workload / agent-linux |
 | 管理仓 | `main` | agentrt / sdk / ecosystem / products |
-| 顶层仓 | `main` | devtools / docs / closed-docs / closed-dev-build |
+| 顶层仓 | `main` | tools / docs / closed-docs / closed-dev-build |
 | 叶子仓 | `feature/official-hubs-01` | 全部 29 个叶子仓统一使用此分支（kernel 例外：`ALK-6.6-dev`） |
 
 > 在 `.gitmodules` 中，每个子模块均显式声明 `branch = ` 字段，确保 `git submodule update --remote` 行为可预期。
 
 ## 6. 嵌套子模块的 git 存储布局
 
-伞仓采用 gitfile + absorbed gitdir 方案，所有子模块的 git 数据集中存储于伞仓 `.git/modules/` 下：
+伞仓采用 gitfile + absorbed gitdir 方案，所有子模块的 git 数据集中存储于 `SpharxWorks/.git/modules/OpenAirymax/modules/` 下（扁平存放，与子模块同名）：
 
 ```
 SpharxWorks/.git/modules/OpenAirymax/                 # 伞仓 git 数据（OpenAirymax 本身是 SpharxWorks 的 submodule）
-├── agent-runtim/                                     # agent-runtim 大管理仓 git 数据
-│   └── modules/                                      # 4 个管理仓的 git 数据（absorb 后归位）
-├── agentrt-linux/                                    # agent-linux 管理仓 git 数据（本地 gitdir 名沿用旧称）
-│   └── modules/                                      # agent-linux 的 8 个叶子仓 git 数据
-├── sdk/ ... ecosystem/ ... products/                 # 4 个管理仓 git 数据（自伞仓收编）
-├── devtools/ ... docs/ ... closed-docs/              # 顶层仓 git 数据
-└── ...
+└── modules/                                          # 全部子模块 git 数据扁平存放（gitfile 指向此处）
+    ├── agent-workload/                               # 用户态大管理仓 git 数据
+    ├── agent-linux/                                  # 内核态大管理仓 git 数据
+    ├── agentrt/ ... sdk/ ... ecosystem/ ... products/  # 4 个管理仓 git 数据
+    ├── tools/ ... docs/ ... closed-docs/ ... closed-dev-build/  # 顶层仓 git 数据
+    └── ...
 ```
 
 每个子模块路径下的 `.git` 是一个 **gitfile**（非目录），内容形如：
 
 ```
-# 叶子仓 gitfile 示例（agent-runtim/agentrt/kernel/.git）
-gitdir: /home/spharx/SpharxWorks/.git/modules/OpenAirymax/modules/agentrt-linux/modules/kernel
+# 叶子仓 gitfile 示例（agent-workload/agentrt/atoms/.git）
+gitdir: /home/spharx/SpharxWorks/.git/modules/OpenAirymax/modules/atoms
 ```
 
-> v0.1.3 移动管理仓后，gitfile 与 `core.worktree` 均已改写为绝对路径，跨工作区移动不受相对深度影响。
+> v0.1.3 移动管理仓 / v0.1.4 更名后，模块存储目录已与子模块同名（agent-workload / agent-linux / tools / closed-docs），gitfile 相对路径指向扁平 modules 区，跨工作区移动不受相对深度影响。
 
 ## 7. 常用操作
 
@@ -211,22 +212,17 @@ git submodule update --remote --recursive
 以给 `agent-linux` 新增一个叶子仓 `foo` 为例：
 
 ```bash
-cd agent-runtim/agent-linux
+cd agent-linux
 # 1. 在远端创建 git@atomgit.com:openairymax/foo.git（feature/official-hubs-01 分支）
 # 2. 添加为子模块
 git submodule add -b feature/official-hubs-01 git@atomgit.com:openairymax/foo.git foo
 # 3. 提交
 git commit -am "feat: 新增 foo 叶子仓"
 git push
-# 4. 回到大管理仓，更新 agent-linux 子模块指针
+# 4. 回到伞仓，更新 agent-linux 子模块指针
 cd ..
 git add agent-linux
 git commit -m "chore: 更新 agent-linux 子模块指针（新增 foo）"
-git push
-# 5. 回到伞仓，更新 agent-runtim 子模块指针
-cd ..
-git add agent-runtim
-git commit -m "chore: 更新 agent-runtim 子模块指针"
 git push
 ```
 
@@ -234,22 +230,17 @@ git push
 
 ```bash
 # 在叶子仓内提交并推送
-cd agent-runtim/agent-linux/kernel
+cd agent-linux/kernel
 git add . && git commit -m "fix: ..." && git push
-# 回到管理仓提交指针更新
+# 回到大管理仓提交指针更新
 cd ..
 git add kernel
 git commit -m "chore: 更新 kernel 子模块指针"
 git push
-# 回到大管理仓提交管理仓指针更新
+# 回到伞仓提交大管理仓指针更新
 cd ..
 git add agent-linux
 git commit -m "chore: 更新 agent-linux 子模块指针"
-git push
-# 回到伞仓提交大管理仓指针更新
-cd ..
-git add agent-runtim
-git commit -m "chore: 更新 agent-runtim 子模块指针"
 git push
 ```
 
@@ -259,6 +250,7 @@ git push
 |------|------|------|
 | 2026-07-07 | 建立 agentrt-linux 管理仓为伞仓直属 submodule，注册 8 个叶子仓；agentrt URL 保持 agentos.git 不变；cli/tui 确认无 sdk- 前缀 | `dccc013`（伞仓）/ `d5c579f`（agentrt-linux） |
 | 2026-08-23 | **v0.1.3 双工程结构**：新增 agent-runtim 用户态大管理仓（收编 agentrt/ecosystem/products/sdk）；agentrt-linux 改名 agent-linux；伞仓仅收编 6 个管理仓；根目录 cmake/scripts 已随 v0.1.2 迁入 agentrt | `a2b0b36`（agent-runtim）/ 伞仓提交见 git log |
+| 2026-08-23 | **v0.1.4 更名**：用户态大管理仓 agent-runtim → **agent-workload**；顶层仓 devtools → **tools**；本地目录、gitlink、模块存储目录、`.gitmodules` / `.git/config` 与全部引用已同步；远程仓已由维护者完成改名 | agent-workload / tools / 伞仓提交见 git log |
 
 ---
 
