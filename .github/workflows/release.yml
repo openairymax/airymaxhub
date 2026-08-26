@@ -14,6 +14,13 @@ on:
 permissions:
   contents: write
 
+# 版本号 SSoT：tag 推送 → github.ref_name（如 v0.1.5）；workflow_dispatch →
+# inputs.version 合成 v 前缀。全流程统一引用 env.VERSION，修复：
+#   - 问题 4：workflow_dispatch 手动触发时 github.ref_name 为分支名而非 tag
+#   - 问题 7：手动发布无需先打 tag，版本由输入唯一决定
+env:
+  VERSION: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v{0}', github.event.inputs.version) }}
+
 jobs:
   # 三平台并行构建：install 聚合到 stage 后打包
   # agentrt-<version>-<os>-<arch>.{tar.gz,zip}，结构对齐 install.sh 二进制
@@ -67,6 +74,8 @@ jobs:
             libmicrohttpd-dev libwebsockets-dev libevent-dev \
             libnghttp2-dev
           pip3 install --no-cache-dir cmake ninja
+          # Rust 工具链（agentrt-tui 完全体包组件）
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
           curl -fsSL -o /tmp/cjson.tar.gz \
             https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.18.tar.gz
           tar -xzf /tmp/cjson.tar.gz -C /tmp
@@ -88,6 +97,7 @@ jobs:
         run: |
           brew install cmake ninja pkgconf sqlite cjson libyaml curl openssl zlib zstd \
             libmicrohttpd libwebsockets libevent nghttp2
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
 
       - name: Install build dependencies (Windows)
         if: runner.os == 'Windows'
@@ -95,11 +105,14 @@ jobs:
         run: |
           # vcpkg 包名：curl（非 libcurl）、libmicrohttpd/libwebsockets（带 lib- 前缀）
           vcpkg install sqlite3 cjson libyaml curl openssl zlib libmicrohttpd libwebsockets libevent nghttp2 --triplet x64-windows
+          # Rust 工具链（agentrt-tui 完全体包组件）
+          Invoke-WebRequest -Uri https://win.rustup.rs/x86_64 -OutFile "$env:TEMP\rustup-init.exe"
+          & "$env:TEMP\rustup-init.exe" -y --profile minimal --default-toolchain stable
 
       - name: Configure (Linux)
         if: runner.os == 'Linux'
         run: |
-          cmake -S agentrt -B ${{ env.BUILD_DIR }} \
+          cmake -S agent-workload/agentrt -B ${{ env.BUILD_DIR }} \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_TESTS=OFF \
             -DENABLE_SANITIZERS=OFF \
@@ -111,7 +124,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           export PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig:$(brew --prefix zlib)/lib/pkgconfig:$(brew --prefix sqlite)/lib/pkgconfig:$(brew --prefix curl)/lib/pkgconfig"
-          cmake -S agentrt -B ${{ env.BUILD_DIR }} \
+          cmake -S agent-workload/agentrt -B ${{ env.BUILD_DIR }} \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_TESTS=OFF \
             -DENABLE_SANITIZERS=OFF \
@@ -121,7 +134,7 @@ jobs:
       - name: Configure (Windows)
         if: runner.os == 'Windows'
         run: |
-          cmake -S agentrt -B ${{ env.BUILD_DIR }} `
+          cmake -S agent-workload/agentrt -B ${{ env.BUILD_DIR }} `
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" `
             -DCMAKE_BUILD_TYPE=Release `
             -DBUILD_TESTS=OFF `
@@ -148,35 +161,79 @@ jobs:
             chmod 755 "${{ env.STAGE_DIR }}/bin/agentrt-bootstrap.sh"
           fi
 
+      # 完全体包完整性（对齐 tools/scripts/ci/release/package-full-release.sh 的
+      # build_full_package 内容，单一清单防漂移）：
+      #   bin/agentrt-tui（Rust TUI）+ lib/（Python 运行时依赖）
+      # CARGO_TARGET_DIR 指向 RUNNER_TEMP，禁止在源码树落盘（铁律 4.7）。
+      # TUI 构建失败仅告警降级，不阻断发布（闭源/工具链缺省容错同哲学）。
+      - name: Build TUI + copy Python runtime (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          source "$HOME/.cargo/env" 2>/dev/null || true
+          export CARGO_TARGET_DIR="$RUNNER_TEMP/tui-target"
+          (cd agent-workload/sdk/tui && cargo build --release)
+          cp -f "$CARGO_TARGET_DIR/release/agentrt-tui" "${{ env.STAGE_DIR }}/bin/" 2>/dev/null || echo "warn: TUI 构建产物缺失（降级）"
+          mkdir -p "${{ env.STAGE_DIR }}/lib"
+          for p in agent-workload/ecosystem/agents/airymax_agents \
+                   agent-workload/ecosystem/agents/airymax_agents_rs \
+                   agent-workload/ecosystem/openlab/openlab \
+                   agent-workload/ecosystem/openlab/markets \
+                   agent-workload/ecosystem/openlab/contrib \
+                   agent-workload/ecosystem/openlab/app \
+                   agent-workload/sdk/sdk-python/agentrt; do
+            [ -d "$p" ] && cp -r "$p" "${{ env.STAGE_DIR }}/lib/" || true
+          done
+
+      - name: Build TUI + copy Python runtime (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $env:PATH = "$env:USERPROFILE\.cargo\bin;$env:PATH"
+          $env:CARGO_TARGET_DIR = "$env:RUNNER_TEMP\tui-target"
+          Push-Location "agent-workload/sdk/tui"
+          & cargo build --release
+          Pop-Location
+          if (Test-Path "$env:CARGO_TARGET_DIR\release\agentrt-tui.exe") {
+            Copy-Item "$env:CARGO_TARGET_DIR\release\agentrt-tui.exe" "${{ env.STAGE_DIR }}\bin\" -Force
+          } else { Write-Host "warn: TUI 构建产物缺失（降级）" }
+          New-Item -ItemType Directory -Path "${{ env.STAGE_DIR }}\lib" -Force | Out-Null
+          foreach ($p in @("agent-workload/ecosystem/agents/airymax_agents","agent-workload/ecosystem/agents/airymax_agents_rs","agent-workload/ecosystem/openlab/openlab","agent-workload/ecosystem/openlab/markets","agent-workload/ecosystem/openlab/contrib","agent-workload/ecosystem/openlab/app","agent-workload/sdk/sdk-python/agentrt")) {
+            if (Test-Path $p) { Copy-Item -Path $p -Destination "${{ env.STAGE_DIR }}\lib\" -Recurse -Force }
+          }
+
       # 打包：包内建 agentrt-<version> 顶层目录。install.sh/install.ps1 二进制
       # 模式按 agentrt-* 目录名匹配解压位置，无顶层目录时二进制安装 100% 失败
       # （回退源码构建 / 静默空装）。同时内置运行时配置模板供二进制模式
       # init_secrets 生成 secrets.env/agentrt.yaml/model.yaml。
       # 制品名统一为 agentrt-<v版本>-<os>-<arch>（如 agentrt-v0.1.2-linux-x86_64.tar.gz）。
+      # 同步产出 *.sha256（install.sh/airymaxrt --file 离线校验所需）。
       - name: Package (tar.gz)
         if: runner.os != 'Windows'
         run: |
-          REF="${{ github.ref_name }}"; VERSION="${REF#v}"
-          PKG_DIR="pkg/agentrt-${VERSION}"
+          VERSION="${{ env.VERSION }}"; VERSION_NUM="${VERSION#v}"
+          PKG_DIR="pkg/agentrt-${VERSION_NUM}"
           mkdir -p "${PKG_DIR}/config"
           cp -rf "${{ env.STAGE_DIR }}"/. "${PKG_DIR}/"
-          cp -f ecosystem/manager/configs/agentrt.yaml "${PKG_DIR}/config/" 2>/dev/null || true
-          cp -f ecosystem/manager/model/model.yaml "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -f agent-workload/ecosystem/manager/configs/agentrt.yaml "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -f agent-workload/ecosystem/manager/model/model.yaml "${PKG_DIR}/config/" 2>/dev/null || true
           cp -f tools/scripts/ops/templates/secrets.env.example "${PKG_DIR}/config/" 2>/dev/null || true
-          ARTIFACT="agentrt-${REF}-${{ matrix.platform }}"
+          ARTIFACT="agentrt-${VERSION}-${{ matrix.platform }}"
           tar -czf "${ARTIFACT}.tar.gz" -C pkg .
+          sha256sum "${ARTIFACT}.tar.gz" > "${ARTIFACT}.tar.gz.sha256"
           echo "artifact_name=${ARTIFACT}" >> "$GITHUB_ENV"
 
       - name: Package (zip)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $REF = "${{ github.ref_name }}"; $VERSION = $REF.TrimStart('v')
-          $pkgDir = "pkg\agentrt-$VERSION"
+          $VERSION = "${{ env.VERSION }}"; $VERSION_NUM = $VERSION.TrimStart('v')
+          $pkgDir = "pkg\agentrt-$VERSION_NUM"
           New-Item -ItemType Directory -Path $pkgDir -Force | Out-Null
           Copy-Item -Path "${{ env.STAGE_DIR }}\*" -Destination "$pkgDir\" -Recurse -Force
-          $artifact = "agentrt-$REF-${{ matrix.platform }}"
+          $artifact = "agentrt-$VERSION-${{ matrix.platform }}"
           Compress-Archive -Path "pkg\*" -DestinationPath "$artifact.zip"
+          # 校验和（Windows 无 sha256sum，用 Get-FileHash）
+          (Get-FileHash -Algorithm SHA256 "$artifact.zip").Hash.ToLower() + "  $artifact.zip" | Out-File -FilePath "$artifact.zip.sha256"
           "artifact_name=$artifact" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Upload artifact
@@ -216,6 +273,7 @@ jobs:
               libssl-dev zlib1g-dev libzstd-dev libmicrohttpd-dev \
               libwebsockets-dev libevent-dev libnghttp2-dev
             pip3 install --no-cache-dir cmake ninja
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
             curl -fsSL -o /tmp/cjson.tar.gz \
               https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.18.tar.gz
             tar -xzf /tmp/cjson.tar.gz -C /tmp
@@ -231,67 +289,142 @@ jobs:
             (cd /tmp/openssl-3.0.17 && ./config --prefix=/usr/local \
               --openssldir=/usr/local/ssl shared && \
               make -j"$(nproc)" && make install_sw)
-            cmake -S agentrt -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release \
+            cmake -S agent-workload/agentrt -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release \
               -DBUILD_TESTS=OFF -DENABLE_SANITIZERS=OFF -DAIRY_BUILD_ALL=ON \
               -DCMAKE_INSTALL_PREFIX="$PWD/$STAGE_DIR"
             cmake --build "$BUILD_DIR" -j"$(nproc)"
             cmake --install "$BUILD_DIR"
+            # Rust TUI（agentrt-tui），失败降级不阻断
+            export PATH="$HOME/.cargo/bin:$PATH"
+            export CARGO_TARGET_DIR=/tmp/tui-target
+            (cd agent-workload/sdk/tui && cargo build --release) || echo "warn: riscv64 TUI 构建失败（降级）"
+            cp -f /tmp/tui-target/release/agentrt-tui "$STAGE_DIR/bin/" 2>/dev/null || true
+            # Python 运行时依赖
+            mkdir -p "$STAGE_DIR/lib"
+            for p in agent-workload/ecosystem/agents/airymax_agents \
+                     agent-workload/ecosystem/agents/airymax_agents_rs \
+                     agent-workload/ecosystem/openlab/openlab \
+                     agent-workload/ecosystem/openlab/markets \
+                     agent-workload/ecosystem/openlab/contrib \
+                     agent-workload/ecosystem/openlab/app \
+                     agent-workload/sdk/sdk-python/agentrt; do
+              [ -d "$p" ] && cp -r "$p" "$STAGE_DIR/lib/" || true
+            done
             '
 
       - name: Package (tar.gz)
         run: |
-          REF="${{ github.ref_name }}"; VERSION="${REF#v}"
-          PKG_DIR="pkg/agentrt-${VERSION}"
+          VERSION="${{ env.VERSION }}"; VERSION_NUM="${VERSION#v}"
+          PKG_DIR="pkg/agentrt-${VERSION_NUM}"
           mkdir -p "${PKG_DIR}/config"
           cp -rf "${{ env.STAGE_DIR }}"/. "${PKG_DIR}/" 2>/dev/null || true
-          cp -f ecosystem/manager/configs/agentrt.yaml "${PKG_DIR}/config/" 2>/dev/null || true
-          cp -f ecosystem/manager/model/model.yaml "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -f agent-workload/ecosystem/manager/configs/agentrt.yaml "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -f agent-workload/ecosystem/manager/model/model.yaml "${PKG_DIR}/config/" 2>/dev/null || true
           cp -f tools/scripts/ops/templates/secrets.env.example "${PKG_DIR}/config/" 2>/dev/null || true
           cp -f tools/scripts/ops/bin/agentrt-bootstrap.sh "${PKG_DIR}/bin/" 2>/dev/null || true
-          ARTIFACT="agentrt-${REF}-linux-riscv64"
+          ARTIFACT="agentrt-${VERSION}-linux-riscv64"
           tar -czf "${ARTIFACT}.tar.gz" -C pkg .
+          sha256sum "${ARTIFACT}.tar.gz" > "${ARTIFACT}.tar.gz.sha256"
           echo "artifact_name=${ARTIFACT}" >> "$GITHUB_ENV"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: agentrt-${{ github.ref_name }}-linux-riscv64
-          path: agentrt-${{ github.ref_name }}-linux-riscv64.tar.gz
+          name: agentrt-${{ env.VERSION }}-linux-riscv64
+          path: agentrt-${{ env.VERSION }}-linux-riscv64.tar.gz*
           if-no-files-found: error
 
-  # 汇聚三平台制品到 GitHub Release
+  # 汇聚三平台制品 → 签名（cosign + GPG）→ manifest 生成 → 发布
+  # 官方制品仓库：atomgit.com/openairymax/agentrt（publish-release.sh 上传）；
+  # GitHub Release 为镜像。双轨签名防供应链：
+  #   cosign sign-blob 每个 tarball（*.sig）；GPG 签名 manifest.*.json（*.asc）。
+  # 需在仓库 secrets 配置：GPG_PRIVATE_KEY/GPG_PASSPHRASE/COSIGN_PRIVATE_KEY/
+  # COSIGN_PASSWORD/ATOMGIT_TOKEN（见 tools/scripts/ci/release/init-signing-keys.sh）。
   release:
     needs: [build, build-riscv64]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    # tag 推送或手动 dispatch（手动时版本来自 inputs.version）皆可触发
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    env:
+      COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+      COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      ATOMGIT_TOKEN: ${{ secrets.ATOMGIT_TOKEN }}
+      ATOMGIT_REPO: openairymax/agentrt
     steps:
+      - name: Checkout (publish tooling + changelog)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
 
-      - name: Create GitHub Release
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.6.0
+
+      - name: Generate release notes
+        run: |
+          VERSION="${{ env.VERSION }}"
+          PREV="$(git describe --tags --abbrev=0 "${VERSION}^" 2>/dev/null || echo '')"
+          if [ -n "$PREV" ]; then
+            git log --oneline --no-merges "${PREV}..${VERSION}" | head -60
+          else
+            git log --oneline --no-merges -20
+          fi > dist/notes.txt
+          echo "变更摘要已生成: $(wc -l < dist/notes.txt) 行"
+
+      # 签名 + manifest 生成 + GPG 签名 + atomgit Release 上传 + latest/ 入口更新。
+      # 未配置 ATOMGIT_TOKEN 时自动跳过上传，产物保留在 dist/（GitHub 镜像照常）。
+      - name: Sign, generate manifest, publish to atomgit
+        env:
+          RELEASE_NOTES_FILE: dist/notes.txt
+        run: |
+          bash ./tools/scripts/ci/release/publish-release.sh "${{ env.VERSION }}" "$PWD/dist"
+
+      - name: Create GitHub Release (mirror)
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: AgentRT ${{ github.ref_name }}
+          tag_name: ${{ env.VERSION }}
+          name: AgentRT ${{ env.VERSION }}
           body: |
-            ## AgentRT ${{ github.ref_name }}
+            ## AgentRT ${{ env.VERSION }}
 
             AI Agent Runtime Platform Engineering — 服务器就绪的 Agent 运行时底座。
 
+            ### 官方制品（atomgit）
+
+            https://atomgit.com/openairymax/agentrt/releases/download/${{ env.VERSION }}/
+
             ### 安装
 
-            下载对应平台包并解压（或直接走安装器二进制模式）：
+            下载对应平台包并解压（或直接走安装器二进制模式，自动 GPG 验签 + sha256 校验）：
 
             ```sh
             # 以 Linux x86_64 为例；macOS → agentrt-<版本>-macos-arm64，Windows → .zip
-            AIRY_RELEASE_URL="https://atomgit.com/openairymax/airymaxhub/releases/download/${{ github.ref_name }}/agentrt-${{ github.ref_name }}-linux-x86_64.tar.gz" ./install.sh
+            AIRY_RELEASE_URL="https://atomgit.com/openairymax/agentrt/releases/download/${{ env.VERSION }}/agentrt-${{ env.VERSION }}-linux-x86_64.tar.gz" ./install.sh
+            ```
+
+            默认通道安装（manifest 方式，更新器同源）：
+
+            ```sh
+            sh <(curl -fsSL https://raw.atomgit.com/openairymax/agentrt/raw/main/scripts/install.sh) --channel stable
+            ```
+
+            ### 更新
+
+            ```sh
+            airymaxrt update --check    # 检查更新
+            airymaxrt update            # 升级到最新
             ```
 
             或直接解压 tarball 后：
-            - `bin/agentrt-bootstrap.sh start` 一键启动 17 个 daemon
+            - `bin/agentrt-bootstrap.sh start` 一键启动 18 个 daemon
             - `bin/airy_cli` 进入 CLI 交互界面（或 `airymaxrt`）
           files: dist/*
-          draft: true

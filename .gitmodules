@@ -10,17 +10,17 @@
 	path = docs
 	url = ../docs.git
 	branch = main
-[submodule "doc-closed"]
-	path = doc-closed
+[submodule "docs-closed"]
+	path = docs-closed
 	url = git@atomgit.com:openairymax/docs-closed.git
-        branch = main
-        update = none
+    branch = main
+    update = none
 [submodule "tools"]
 	path = tools
 	url = ../tools.git
 	branch = main
-[submodule "devbuild-closed"]
-	path = devbuild-closed
-	url = git@atomgit.com:openairymax/devbuild-closed.git
+[submodule "developbuild"]
+	path = developbuild
+	url = git@atomgit.com:openairymax/developbuild.git
 	branch = main
 	update = none
