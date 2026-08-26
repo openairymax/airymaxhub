@@ -19,8 +19,8 @@
 	path = tools
 	url = ../tools.git
 	branch = main
-[submodule "build-closed"]
-	path = build-closed
+[submodule "devbuild-closed"]
+	path = devbuild-closed
 	url = git@atomgit.com:openairymax/devbuild-closed.git
 	branch = main
 	update = none
