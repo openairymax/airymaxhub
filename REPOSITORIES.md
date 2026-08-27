@@ -41,7 +41,7 @@ airymaxhub/                                     # 伞仓（git@atomgit.com:opena
 │   │   ├── scripts/     [直属目录]                # 官方安装器 install.sh/install.ps1（v0.1.2 起自伞仓迁入）
 │   │   └── LICENSES/    [直属目录]                # SPDX 许可文本
 │   ├── ecosystem/      [管理仓] → ecosystem.git
-│   │   └── manager/ · prompts/ · examples/ · openlab/ · skills/ · agents/  [叶子仓 ×6]
+│   │   └── manager/ · prompts/ · markets/ · skills/ · agents/  [叶子仓 ×5]
 │   ├── products/       [管理仓] → products.git
 │   │   └── desktop/ · docker/ · memoryrovol/      [叶子仓 ×3]
 │   └── sdk/            [管理仓] → sdk.git
@@ -79,7 +79,7 @@ airymaxhub/                                     # 伞仓（git@atomgit.com:opena
 | 3 | `agent-workload/agentrt/.gitmodules` | 7 | 叶子仓 | atoms, commons, cupolas, daemons, gateway, heapstore, protocols |
 | 4 | `agent-linux/.gitmodules` | 8 | 叶子仓 | kernel, memory, security, cognition, services, system, cloudnative, tests-linux |
 | 5 | `agent-workload/sdk/.gitmodules` | 6 | 叶子仓 | sdk-python, sdk-go, sdk-rust, sdk-typescript, cli, tui |
-| 6 | `agent-workload/ecosystem/.gitmodules` | 6 | 叶子仓 | manager, prompts, examples, openlab, skills, agents |
+| 6 | `agent-workload/ecosystem/.gitmodules` | 5 | 叶子仓 | manager, prompts, markets, skills, agents |
 | 7 | `agent-workload/products/.gitmodules` | 3 | 叶子仓 | desktop, docker, memoryrovol |
 
 > 顶层仓（tools / docs / closed-docs / closed-dev-build）为单仓，不含 `.gitmodules`。
@@ -141,8 +141,7 @@ git@atomgit.com:openairymax/<仓库名>.git
 | tui | 叶子仓 | `git@atomgit.com:openairymax/tui.git` ⚠️E2 | `feature/official-hubs-01` |
 | manager | 叶子仓 | `git@atomgit.com:openairymax/manager.git` | `feature/official-hubs-01` |
 | prompts | 叶子仓 | `git@atomgit.com:openairymax/prompts.git` | `feature/official-hubs-01` |
-| examples | 叶子仓 | `git@atomgit.com:openairymax/examples.git` | `feature/official-hubs-01` |
-| openlab | 叶子仓 | `git@atomgit.com:openairymax/openlab.git` | `feature/official-hubs-01` |
+| markets | 叶子仓 | `git@atomgit.com:openairymax/markets.git` | `feature/official-hubs-01` |
 | skills | 叶子仓 | `git@atomgit.com:openairymax/skills.git` | `feature/official-hubs-01` |
 | agents | 叶子仓 | `git@atomgit.com:openairymax/agents.git` | `main` |
 | desktop | 叶子仓 | `git@atomgit.com:openairymax/desktop.git` | `feature/official-hubs-01` |
