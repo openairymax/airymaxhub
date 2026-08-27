@@ -108,7 +108,7 @@ For a quick reference, see the table below:
         |   gateway,heapstore,protocols}/LICENSE,                     |   OR Apache-2.0
         | agent-workload/sdk/LICENSE, agent-workload/sdk/{cli,sdk-go,sdk-python,sdk-rust,          |
         |   sdk-typescript,tui}/LICENSE,                              |
-        | agent-workload/ecosystem/LICENSE, agent-workload/ecosystem/{examples,manager,openlab,    |
+        | agent-workload/ecosystem/LICENSE, agent-workload/ecosystem/{agents,manager,markets,       |
         |   prompts,skills}/LICENSE,                                  |
         | agent-workload/products/{docker,desktop}/LICENSE,           |
         | agent-linux/LICENSE, agent-linux/{cloudnative,cognition,   |
