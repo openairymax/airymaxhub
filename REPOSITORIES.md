@@ -163,10 +163,10 @@ git@atomgit.com:openairymax/<仓库名>.git
 
 ## 6. 嵌套子模块的 git 存储布局
 
-伞仓采用 gitfile + absorbed gitdir 方案，所有子模块的 git 数据集中存储于 `SpharxWorks/.git/modules/OpenAirymax/modules/` 下（扁平存放，与子模块同名）：
+伞仓采用 gitfile + absorbed gitdir 方案，所有子模块的 git 数据集中存储于 `<工作区根>/.git/modules/OpenAirymax/modules/` 下（扁平存放，与子模块同名）：
 
 ```
-SpharxWorks/.git/modules/OpenAirymax/                 # 伞仓 git 数据（OpenAirymax 本身是 SpharxWorks 的 submodule）
+<工作区根>/.git/modules/OpenAirymax/                 # 伞仓 git 数据（OpenAirymax 本身是上层工作区的 submodule）
 └── modules/                                          # 全部子模块 git 数据扁平存放（gitfile 指向此处）
     ├── agent-workload/                               # 用户态大管理仓 git 数据
     ├── agent-linux/                                  # 内核态大管理仓 git 数据
@@ -179,7 +179,7 @@ SpharxWorks/.git/modules/OpenAirymax/                 # 伞仓 git 数据（Open
 
 ```
 # 叶子仓 gitfile 示例（agent-workload/agentrt/atoms/.git）
-gitdir: /home/spharx/SpharxWorks/.git/modules/OpenAirymax/modules/atoms
+gitdir: <工作区根>/.git/modules/OpenAirymax/modules/atoms
 ```
 
 > v0.1.3 移动管理仓 / v0.1.4 更名后，模块存储目录已与子模块同名（agent-workload / agent-linux / tools / closed-docs），gitfile 相对路径指向扁平 modules 区，跨工作区移动不受相对深度影响。
