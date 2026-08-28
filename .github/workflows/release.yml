@@ -493,12 +493,11 @@ jobs:
             AIRY_RELEASE_URL="https://atomgit.com/openairymax/agentrt/releases/download/${{ env.VERSION }}/agentrt-${{ env.VERSION }}-linux-x86_64.tar.gz" ./install.sh
             ```
 
-            默认通道安装（manifest 方式，更新器同源）：
+            默认通道安装（安装器随 release 附件分发，匿名直连，一行完成
+            GPG 验签 + sha256 校验）：
 
             ```sh
-            curl -fsSL "https://api.atomgit.com/api/v5/repos/openairymax/agentrt/contents/scripts/install.sh?ref=main" \
-              | python3 -c 'import json,sys,base64;sys.stdout.buffer.write(base64.b64decode(json.load(sys.stdin)["content"]))' \
-              | bash -s -- --channel stable
+            curl -fsSL "https://atomgit.com/openairymax/agentrt/releases/download/${{ env.VERSION }}/install.sh" | bash -s -- --channel stable
             ```
 
             ### 更新
