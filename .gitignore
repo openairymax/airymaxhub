@@ -15,4 +15,5 @@
 !CONTRIBUTING.md
 !SECURITY.md
 # 伞仓直属模块（非 submodule，需完整追踪）
+!.github/
 !.github/**
