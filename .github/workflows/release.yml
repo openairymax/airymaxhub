@@ -353,10 +353,17 @@ jobs:
               libsqlite3-dev libyaml-dev libcurl4-openssl-dev \
               libssl-dev zlib1g-dev libzstd-dev libmicrohttpd-dev \
               libwebsockets-dev libevent-dev libnghttp2-dev
-            # cmake 固定 3.29.6：riscv64 无预编译 wheel 走 PEP 517 源码构建，
-            # 4.x 自带 cmcurl 在 riscv64/gcc9 + OpenSSL 1.1.1 下编译失败；
-            # aarch64 用同版本 wheel 保证确定性
-            pip3 install --no-cache-dir "cmake==3.29.6" ninja
+            # cmake 固定 3.29.6：riscv64 无预编译 wheel（pip 仅提供
+            # amd64/arm64/macos/windows 预编译；riscv64 的 sdist 是桩，
+            # 且 4.x 自带 cmcurl 在 gcc9 + OpenSSL 1.1.1 下编译失败）。
+            # GitHub Actions 内 GitHub 可达，两架构统一源码构建保证
+            # 确定性（bootstrap+make 与 20.04 工具链兼容）：
+            curl -fsSL --retry 3 -o /tmp/cmake.tar.gz \
+              https://github.com/Kitware/CMake/releases/download/v3.29.6/cmake-3.29.6.tar.gz
+            tar -xzf /tmp/cmake.tar.gz -C /tmp
+            (cd /tmp/cmake-3.29.6 && ./bootstrap --parallel="$(nproc)" --no-qt-gui --no-debugger \
+              -- -DBUILD_TESTING=OFF -DBUILD_CursesDialog:BOOL=OFF \
+              && make -j"$(nproc)" && make install)
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
             curl -fsSL -o /tmp/cjson.tar.gz \
               https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.18.tar.gz
@@ -378,11 +385,19 @@ jobs:
               -DCMAKE_INSTALL_PREFIX="$PWD/$STAGE_DIR"
             cmake --build "$BUILD_DIR" -j"$(nproc)"
             cmake --install "$BUILD_DIR"
-            # Rust TUI（agentrt-tui），失败降级不阻断
+            # Rust TUI（agentrt-tui），失败降级不阻断。riscv64 链接陷阱：
+            # GNU ld 2.34 无法合并 RISC-V attributes（libc build script 即
+            # 失败）；与本地 build-arch.sh 同源修复——rust-lld 复制为
+            # ld.lld，gcc driver 保留库路径，-fuse-ld=lld 仅换链接器。
             export PATH="$HOME/.cargo/bin:$PATH"
             export CARGO_TARGET_DIR=/tmp/tui-target
-            (cd agent-workload/sdk/tui && cargo build --release) || echo "warn: riscv64 TUI 构建失败（降级）"
-            cp -f /tmp/tui-target/release/agentrt-tui "$STAGE_DIR/bin/" 2>/dev/null || true
+            RUST_LLD="$(find "$HOME/.rustup" -name rust-lld -path '*riscv64*' 2>/dev/null | head -1)"
+            if [ -n "$RUST_LLD" ]; then cp -f "$RUST_LLD" /usr/local/bin/ld.lld; chmod +x /usr/local/bin/ld.lld; fi
+            if ! (cd agent-workload/sdk/tui && RUSTFLAGS="-C link-arg=-fuse-ld=lld" cargo build --release); then
+              echo "warn: riscv64 TUI 构建失败（降级）"
+            else
+              cp -f /tmp/tui-target/release/agentrt-tui "$STAGE_DIR/bin/" 2>/dev/null || true
+            fi
             # Python 运行时依赖
             mkdir -p "$STAGE_DIR/lib"
             for p in agent-workload/ecosystem/agents/airymax_agents \
@@ -446,10 +461,17 @@ jobs:
               libsqlite3-dev libyaml-dev libcurl4-openssl-dev \
               libssl-dev zlib1g-dev libzstd-dev libmicrohttpd-dev \
               libwebsockets-dev libevent-dev libnghttp2-dev
-            # cmake 固定 3.29.6：riscv64 无预编译 wheel 走 PEP 517 源码构建，
-            # 4.x 自带 cmcurl 在 riscv64/gcc9 + OpenSSL 1.1.1 下编译失败；
-            # aarch64 用同版本 wheel 保证确定性
-            pip3 install --no-cache-dir "cmake==3.29.6" ninja
+            # cmake 固定 3.29.6：riscv64 无预编译 wheel（pip 仅提供
+            # amd64/arm64/macos/windows 预编译；riscv64 的 sdist 是桩，
+            # 且 4.x 自带 cmcurl 在 gcc9 + OpenSSL 1.1.1 下编译失败）。
+            # GitHub Actions 内 GitHub 可达，两架构统一源码构建保证
+            # 确定性（bootstrap+make 与 20.04 工具链兼容）：
+            curl -fsSL --retry 3 -o /tmp/cmake.tar.gz \
+              https://github.com/Kitware/CMake/releases/download/v3.29.6/cmake-3.29.6.tar.gz
+            tar -xzf /tmp/cmake.tar.gz -C /tmp
+            (cd /tmp/cmake-3.29.6 && ./bootstrap --parallel="$(nproc)" --no-qt-gui --no-debugger \
+              -- -DBUILD_TESTING=OFF -DBUILD_CursesDialog:BOOL=OFF \
+              && make -j"$(nproc)" && make install)
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
             curl -fsSL -o /tmp/cjson.tar.gz \
               https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.18.tar.gz
