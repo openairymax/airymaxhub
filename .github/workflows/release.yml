@@ -498,7 +498,7 @@ jobs:
             ```sh
             curl -fsSL "https://api.atomgit.com/api/v5/repos/openairymax/agentrt/contents/scripts/install.sh?ref=main" \
               | python3 -c 'import json,sys,base64;sys.stdout.buffer.write(base64.b64decode(json.load(sys.stdin)["content"]))' \
-              | sh -s -- --channel stable
+              | bash -s -- --channel stable
             ```
 
             ### 更新
