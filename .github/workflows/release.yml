@@ -57,7 +57,7 @@ jobs:
             libssl-dev zlib1g-dev libzstd-dev \
             libmicrohttpd-dev libwebsockets-dev libevent-dev \
             libnghttp2-dev
-          pip3 install --no-cache-dir cmake ninja
+          pip3 install --no-cache-dir "cmake==3.29.6" ninja
           # Rust 工具链（agentrt-tui 完全体包组件）
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
           curl -fsSL -o /tmp/cjson.tar.gz \
@@ -353,7 +353,10 @@ jobs:
               libsqlite3-dev libyaml-dev libcurl4-openssl-dev \
               libssl-dev zlib1g-dev libzstd-dev libmicrohttpd-dev \
               libwebsockets-dev libevent-dev libnghttp2-dev
-            pip3 install --no-cache-dir cmake ninja
+            # cmake 固定 3.29.6：riscv64 无预编译 wheel 走 PEP 517 源码构建，
+            # 4.x 自带 cmcurl 在 riscv64/gcc9 + OpenSSL 1.1.1 下编译失败；
+            # aarch64 用同版本 wheel 保证确定性
+            pip3 install --no-cache-dir "cmake==3.29.6" ninja
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
             curl -fsSL -o /tmp/cjson.tar.gz \
               https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.18.tar.gz
@@ -443,7 +446,10 @@ jobs:
               libsqlite3-dev libyaml-dev libcurl4-openssl-dev \
               libssl-dev zlib1g-dev libzstd-dev libmicrohttpd-dev \
               libwebsockets-dev libevent-dev libnghttp2-dev
-            pip3 install --no-cache-dir cmake ninja
+            # cmake 固定 3.29.6：riscv64 无预编译 wheel 走 PEP 517 源码构建，
+            # 4.x 自带 cmcurl 在 riscv64/gcc9 + OpenSSL 1.1.1 下编译失败；
+            # aarch64 用同版本 wheel 保证确定性
+            pip3 install --no-cache-dir "cmake==3.29.6" ninja
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
             curl -fsSL -o /tmp/cjson.tar.gz \
               https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.18.tar.gz
