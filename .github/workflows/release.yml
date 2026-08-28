@@ -209,11 +209,19 @@ jobs:
         run: |
           VERSION="${{ env.VERSION }}"; VERSION_NUM="${VERSION#v}"
           PKG_DIR="pkg/agentrt-${VERSION_NUM}"
-          mkdir -p "${PKG_DIR}/config"
+          mkdir -p "${PKG_DIR}/config" "${PKG_DIR}/modules"
           cp -rf "${{ env.STAGE_DIR }}"/. "${PKG_DIR}/"
           cp -f agent-workload/ecosystem/manager/configs/agentrt.yaml "${PKG_DIR}/config/" 2>/dev/null || true
           cp -f agent-workload/ecosystem/manager/model/model.yaml "${PKG_DIR}/config/" 2>/dev/null || true
           cp -f tools/scripts/ops/templates/secrets.env.example "${PKG_DIR}/config/" 2>/dev/null || true
+          # 与本地打包（package-full-release.sh / build-arch.sh）保持一致：
+          # permission_rules.yaml（工具 ACL）+ maths-toolkit（数学后端）+ platform 标记
+          cp -f tools/scripts/ops/templates/permission_rules.yaml "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -rf agent-workload/ecosystem/markets/tools/maths-toolkit "${PKG_DIR}/modules/" 2>/dev/null || true
+          case "${{ matrix.platform }}" in
+            linux-x86_64) touch "${PKG_DIR}/platform-x86_64" ;;
+            macos-arm64)  touch "${PKG_DIR}/platform-aarch64" ;;
+          esac
           ARTIFACT="agentrt-${VERSION}-${{ matrix.platform }}"
           tar -czf "${ARTIFACT}.tar.gz" -C pkg .
           sha256sum "${ARTIFACT}.tar.gz" > "${ARTIFACT}.tar.gz.sha256"
@@ -310,12 +318,15 @@ jobs:
         run: |
           VERSION="${{ env.VERSION }}"; VERSION_NUM="${VERSION#v}"
           PKG_DIR="pkg/agentrt-${VERSION_NUM}"
-          mkdir -p "${PKG_DIR}/config"
+          mkdir -p "${PKG_DIR}/config" "${PKG_DIR}/modules"
           cp -rf "${{ env.STAGE_DIR }}"/. "${PKG_DIR}/" 2>/dev/null || true
           cp -f agent-workload/ecosystem/manager/configs/agentrt.yaml "${PKG_DIR}/config/" 2>/dev/null || true
           cp -f agent-workload/ecosystem/manager/model/model.yaml "${PKG_DIR}/config/" 2>/dev/null || true
           cp -f tools/scripts/ops/templates/secrets.env.example "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -f tools/scripts/ops/templates/permission_rules.yaml "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -rf agent-workload/ecosystem/markets/tools/maths-toolkit "${PKG_DIR}/modules/" 2>/dev/null || true
           cp -f tools/scripts/ops/bin/agentrt-bootstrap.sh "${PKG_DIR}/bin/" 2>/dev/null || true
+          touch "${PKG_DIR}/platform-riscv64"
           ARTIFACT="agentrt-${VERSION}-linux-riscv64"
           tar -czf "${ARTIFACT}.tar.gz" -C pkg .
           sha256sum "${ARTIFACT}.tar.gz" > "${ARTIFACT}.tar.gz.sha256"
@@ -397,11 +408,13 @@ jobs:
         run: |
           VERSION="${{ env.VERSION }}"; VERSION_NUM="${VERSION#v}"
           PKG_DIR="pkg/agentrt-${VERSION_NUM}"
-          mkdir -p "${PKG_DIR}/config"
+          mkdir -p "${PKG_DIR}/config" "${PKG_DIR}/modules"
           cp -rf "${{ env.STAGE_DIR }}"/. "${PKG_DIR}/" 2>/dev/null || true
           cp -f agent-workload/ecosystem/manager/configs/agentrt.yaml "${PKG_DIR}/config/" 2>/dev/null || true
           cp -f agent-workload/ecosystem/manager/model/model.yaml "${PKG_DIR}/config/" 2>/dev/null || true
           cp -f tools/scripts/ops/templates/secrets.env.example "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -f tools/scripts/ops/templates/permission_rules.yaml "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -rf agent-workload/ecosystem/markets/tools/maths-toolkit "${PKG_DIR}/modules/" 2>/dev/null || true
           cp -f tools/scripts/ops/bin/agentrt-bootstrap.sh "${PKG_DIR}/bin/" 2>/dev/null || true
           touch "${PKG_DIR}/platform-aarch64"
           ARTIFACT="agentrt-${VERSION}-linux-aarch64"
