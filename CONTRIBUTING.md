@@ -7,7 +7,7 @@
 
 - **用户态**：`agent-workload`（v0.1.4 由 `agent-runtim` 改名；含 `agentrt` 核心运行时、`sdk`、`ecosystem`、`products`）
 - **内核态**：`agent-linux`（v0.1.3 由 `agentrt-linux` 改名）
-- 顶层仓：`docs`、`closed-docs`、`tools`（v0.1.4 由 `devtools` 改名）、`developbuild`（由 `devbuild-closed` 改名，含 `package-airymaxrt/` 离线包归档）
+- 顶层仓：`docs`、`closed-docs`、`tools`（v0.1.4 由 `devtools` 改名）、`developbuild`（由 `devbuild-closed` 改名，统一打包工作区：`agentrt/` 含 dist 制品与安装器快照、`agentrt-linux/`）
 
 大部分开发工作发生在各个子仓库（leaf repository）中。请先阅读对应子仓库内的
 `CONTRIBUTING.md`（如有）以获得该仓库的具体约定。
