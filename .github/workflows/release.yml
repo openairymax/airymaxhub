@@ -74,7 +74,7 @@ jobs:
           tar -xzf /tmp/openssl.tar.gz -C /tmp
           (cd /tmp/openssl-3.0.17 && ./config --prefix=/usr/local \
             --openssldir=/usr/local/ssl shared && \
-            make -j"$(nproc)" && make install_sw)
+            make -j"$(nproc)" build_sw && make install_sw)
 
       - name: Configure
         run: |
@@ -369,7 +369,7 @@ jobs:
             tar -xzf /tmp/openssl.tar.gz -C /tmp
             (cd /tmp/openssl-3.0.17 && ./config --prefix=/usr/local \
               --openssldir=/usr/local/ssl shared && \
-              make -j"$(nproc)" && make install_sw)
+              make -j"$(nproc)" build_sw && make install_sw)
             cmake -S agent-workload/agentrt -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release \
               -DBUILD_TESTS=OFF -DENABLE_SANITIZERS=OFF -DAIRY_BUILD_ALL=ON \
               -DCMAKE_INSTALL_PREFIX="$PWD/$STAGE_DIR"
@@ -459,7 +459,7 @@ jobs:
             tar -xzf /tmp/openssl.tar.gz -C /tmp
             (cd /tmp/openssl-3.0.17 && ./config --prefix=/usr/local \
               --openssldir=/usr/local/ssl shared && \
-              make -j"$(nproc)" && make install_sw)
+              make -j"$(nproc)" build_sw && make install_sw)
             cmake -S agent-workload/agentrt -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release \
               -DBUILD_TESTS=OFF -DENABLE_SANITIZERS=OFF -DAIRY_BUILD_ALL=ON \
               -DCMAKE_INSTALL_PREFIX="$PWD/$STAGE_DIR"
