@@ -496,7 +496,9 @@ jobs:
             默认通道安装（manifest 方式，更新器同源）：
 
             ```sh
-            sh <(curl -fsSL https://raw.atomgit.com/openairymax/agentrt/raw/main/scripts/install.sh) --channel stable
+            curl -fsSL "https://api.atomgit.com/api/v5/repos/openairymax/agentrt/contents/scripts/install.sh?ref=main" \
+              | python3 -c 'import json,sys,base64;sys.stdout.buffer.write(base64.b64decode(json.load(sys.stdin)["content"]))' \
+              | sh -s -- --channel stable
             ```
 
             ### 更新
