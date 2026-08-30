@@ -1,0 +1,32 @@
+name: SSoT Validate
+
+# 用户态 SSoT 技术点权威源门禁（0.1.6 P2-3）：docs/AirymaxRT/.../
+# 09-ssot-registry.md §1.7 登记的 agentrt 技术点（TP-012~016）权威源
+# 与物理宿主路径必须全部存在，登记了不存在的路径即 CI 失败（漂移门禁）。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ssot-validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 1
+
+      - name: Run validate-ssot
+        run: |
+          python3 tools/scripts/ci/verify/validate-ssot.py "$(pwd)"
