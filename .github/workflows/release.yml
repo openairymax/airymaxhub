@@ -76,6 +76,14 @@ jobs:
             --openssldir=/usr/local/ssl shared && \
             make -j"$(nproc)" build_sw && make install_sw)
 
+      # 0.1.6f：依赖自编译统一收敛到 lib-builddeps.sh（SSoT，与本地
+      # build.sh 同源）——自编译 OpenSSL 3.0.17 + libcurl 8.5.0 +
+      # libwebsockets 4.3.3，统一 libssl.so.3 链路，根治宿主缺
+      # libssl.so.1.1 崩溃（apt 预编译库链接 1.1.1 双 OpenSSL ABI）。
+      - name: Build self-compiled deps (curl/lws/openssl SSoT)
+        run: |
+          bash tools/scripts/ci/release/lib-builddeps.sh
+
       - name: Configure
         run: |
           cmake -S agent-workload/agentrt -B ${{ env.BUILD_DIR }} \
@@ -83,6 +91,7 @@ jobs:
             -DBUILD_TESTS=OFF \
             -DENABLE_SANITIZERS=OFF \
             -DAIRY_BUILD_ALL=ON \
+            -DOPENSSL_ROOT_DIR=/usr/local -DCMAKE_PREFIX_PATH=/usr/local \
             -DCMAKE_INSTALL_PREFIX="${{ env.STAGE_DIR }}"
 
       - name: Build
@@ -353,35 +362,16 @@ jobs:
               libsqlite3-dev libyaml-dev libcurl4-openssl-dev \
               libssl-dev zlib1g-dev libzstd-dev libmicrohttpd-dev \
               libwebsockets-dev libevent-dev libnghttp2-dev
-            # cmake 固定 3.29.6：riscv64 无预编译 wheel（pip 仅提供
-            # amd64/arm64/macos/windows 预编译；riscv64 的 sdist 是桩，
-            # 且 4.x 自带 cmcurl 在 gcc9 + OpenSSL 1.1.1 下编译失败）。
-            # GitHub Actions 内 GitHub 可达，两架构统一源码构建保证
-            # 确定性（bootstrap+make 与 20.04 工具链兼容）：
-            curl -fsSL --retry 3 -o /tmp/cmake.tar.gz \
-              https://github.com/Kitware/CMake/releases/download/v3.29.6/cmake-3.29.6.tar.gz
-            tar -xzf /tmp/cmake.tar.gz -C /tmp
-            (cd /tmp/cmake-3.29.6 && ./bootstrap --parallel="$(nproc)" --no-qt-gui --no-debugger \
-              -- -DBUILD_TESTING=OFF -DBUILD_CursesDialog:BOOL=OFF \
-              && make -j"$(nproc)" && make install)
+            # 0.1.6f SSoT：cmake/cJSON/OpenSSL/libcurl/libwebsockets 自编译
+            # 收敛到 lib-builddeps.sh（与本地 build.sh / build-linux 同源，
+            # 幂等 + 离线 deps 缓存优先）。统一 libssl.so.3 链路。
+            bash /src/tools/scripts/ci/release/lib-builddeps.sh
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
-            curl -fsSL -o /tmp/cjson.tar.gz \
-              https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.18.tar.gz
-            tar -xzf /tmp/cjson.tar.gz -C /tmp
-            cmake -S /tmp/cJSON-1.7.18 -B /tmp/cjson-build \
-              -DCMAKE_INSTALL_PREFIX=/usr/local \
-              -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-              -DENABLE_CJSON_TEST=OFF -DBUILD_SHARED_LIBS=ON
-            cmake --build /tmp/cjson-build --parallel
-            cmake --install /tmp/cjson-build
-            curl -fsSL -o /tmp/openssl.tar.gz \
-              https://github.com/openssl/openssl/releases/download/openssl-3.0.17/openssl-3.0.17.tar.gz
-            tar -xzf /tmp/openssl.tar.gz -C /tmp
-            (cd /tmp/openssl-3.0.17 && ./config --prefix=/usr/local \
-              --openssldir=/usr/local/ssl shared && \
-              make -j"$(nproc)" build_sw && make install_sw)
+            export PATH="$HOME/.cargo/bin:$PATH"
+            export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
             cmake -S agent-workload/agentrt -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release \
               -DBUILD_TESTS=OFF -DENABLE_SANITIZERS=OFF -DAIRY_BUILD_ALL=ON \
+              -DOPENSSL_ROOT_DIR=/usr/local -DCMAKE_PREFIX_PATH=/usr/local \
               -DCMAKE_INSTALL_PREFIX="$PWD/$STAGE_DIR"
             cmake --build "$BUILD_DIR" -j"$(nproc)"
             cmake --install "$BUILD_DIR"
@@ -462,35 +452,16 @@ jobs:
               libsqlite3-dev libyaml-dev libcurl4-openssl-dev \
               libssl-dev zlib1g-dev libzstd-dev libmicrohttpd-dev \
               libwebsockets-dev libevent-dev libnghttp2-dev
-            # cmake 固定 3.29.6：riscv64 无预编译 wheel（pip 仅提供
-            # amd64/arm64/macos/windows 预编译；riscv64 的 sdist 是桩，
-            # 且 4.x 自带 cmcurl 在 gcc9 + OpenSSL 1.1.1 下编译失败）。
-            # GitHub Actions 内 GitHub 可达，两架构统一源码构建保证
-            # 确定性（bootstrap+make 与 20.04 工具链兼容）：
-            curl -fsSL --retry 3 -o /tmp/cmake.tar.gz \
-              https://github.com/Kitware/CMake/releases/download/v3.29.6/cmake-3.29.6.tar.gz
-            tar -xzf /tmp/cmake.tar.gz -C /tmp
-            (cd /tmp/cmake-3.29.6 && ./bootstrap --parallel="$(nproc)" --no-qt-gui --no-debugger \
-              -- -DBUILD_TESTING=OFF -DBUILD_CursesDialog:BOOL=OFF \
-              && make -j"$(nproc)" && make install)
+            # 0.1.6f SSoT：cmake/cJSON/OpenSSL/libcurl/libwebsockets 自编译
+            # 收敛到 lib-builddeps.sh（与本地 build.sh / build-linux 同源，
+            # 幂等 + 离线 deps 缓存优先）。统一 libssl.so.3 链路。
+            bash /src/tools/scripts/ci/release/lib-builddeps.sh
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
-            curl -fsSL -o /tmp/cjson.tar.gz \
-              https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.18.tar.gz
-            tar -xzf /tmp/cjson.tar.gz -C /tmp
-            cmake -S /tmp/cJSON-1.7.18 -B /tmp/cjson-build \
-              -DCMAKE_INSTALL_PREFIX=/usr/local \
-              -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-              -DENABLE_CJSON_TEST=OFF -DBUILD_SHARED_LIBS=ON
-            cmake --build /tmp/cjson-build --parallel
-            cmake --install /tmp/cjson-build
-            curl -fsSL -o /tmp/openssl.tar.gz \
-              https://github.com/openssl/openssl/releases/download/openssl-3.0.17/openssl-3.0.17.tar.gz
-            tar -xzf /tmp/openssl.tar.gz -C /tmp
-            (cd /tmp/openssl-3.0.17 && ./config --prefix=/usr/local \
-              --openssldir=/usr/local/ssl shared && \
-              make -j"$(nproc)" build_sw && make install_sw)
+            export PATH="$HOME/.cargo/bin:$PATH"
+            export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
             cmake -S agent-workload/agentrt -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release \
               -DBUILD_TESTS=OFF -DENABLE_SANITIZERS=OFF -DAIRY_BUILD_ALL=ON \
+              -DOPENSSL_ROOT_DIR=/usr/local -DCMAKE_PREFIX_PATH=/usr/local \
               -DCMAKE_INSTALL_PREFIX="$PWD/$STAGE_DIR"
             cmake --build "$BUILD_DIR" -j"$(nproc)"
             cmake --install "$BUILD_DIR"
@@ -578,30 +549,14 @@ jobs:
               libsqlite3-dev libyaml-dev libcurl4-openssl-dev \
               libssl-dev zlib1g-dev libzstd-dev libmicrohttpd-dev \
               libwebsockets-dev libevent-dev libnghttp2-dev
-            # cmake 固定 3.29.6（同 riscv64/arm64 作业，源码构建保证确定性）
-            curl -fsSL --retry 3 -o /tmp/cmake.tar.gz \
-              https://github.com/Kitware/CMake/releases/download/v3.29.6/cmake-3.29.6.tar.gz
-            tar -xzf /tmp/cmake.tar.gz -C /tmp
-            (cd /tmp/cmake-3.29.6 && ./bootstrap --parallel="$(nproc)" --no-qt-gui --no-debugger \
-              -- -DBUILD_TESTING=OFF -DBUILD_CursesDialog:BOOL=OFF \
-              && make -j"$(nproc)" && make install)
-            curl -fsSL -o /tmp/cjson.tar.gz \
-              https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.18.tar.gz
-            tar -xzf /tmp/cjson.tar.gz -C /tmp
-            cmake -S /tmp/cJSON-1.7.18 -B /tmp/cjson-build \
-              -DCMAKE_INSTALL_PREFIX=/usr/local \
-              -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-              -DENABLE_CJSON_TEST=OFF -DBUILD_SHARED_LIBS=ON
-            cmake --build /tmp/cjson-build --parallel
-            cmake --install /tmp/cjson-build
-            curl -fsSL -o /tmp/openssl.tar.gz \
-              https://github.com/openssl/openssl/releases/download/openssl-3.0.17/openssl-3.0.17.tar.gz
-            tar -xzf /tmp/openssl.tar.gz -C /tmp
-            (cd /tmp/openssl-3.0.17 && ./config --prefix=/usr/local \
-              --openssldir=/usr/local/ssl shared && \
-              make -j"$(nproc)" build_sw && make install_sw)
+            # 0.1.6f SSoT：cmake/cJSON/OpenSSL/libcurl/libwebsockets 自编译
+            # 收敛到 lib-builddeps.sh（与本地 build.sh / 其他 Linux job
+            # 同源，幂等 + 离线 deps 缓存优先）。统一 libssl.so.3 链路。
+            bash /src/tools/scripts/ci/release/lib-builddeps.sh
+            export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
             cmake -S agent-workload/agentrt -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release \
               -DBUILD_TESTS=OFF -DENABLE_SANITIZERS=OFF -DAIRY_BUILD_ALL=ON \
+              -DOPENSSL_ROOT_DIR=/usr/local -DCMAKE_PREFIX_PATH=/usr/local \
               -DCMAKE_INSTALL_PREFIX="$PWD/$STAGE_DIR"
             cmake --build "$BUILD_DIR" -j"$(nproc)"
             cmake --install "$BUILD_DIR"
