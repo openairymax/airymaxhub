@@ -1,7 +1,7 @@
 # 仓库结构与子模块文档（REPOSITORIES.md）
 
 > 本文件是 OpenAirymax 全部 38 个 git 仓库的权威索引，记录 `.gitmodules` 层次、URL 约定与分支策略。
-> 最后更新：2026-08-23（v0.1.4 双工程结构 + 用户态仓更名）· 维护者：SPHARX Ltd.
+> 最后更新：2026-08-30（0.1.6 生态 SSoT S-7：叶子仓分支与 .gitmodules/实际分支对齐为 develop/hubs-01）· 维护者：SPHARX Ltd.
 
 ---
 
@@ -118,35 +118,35 @@ git@atomgit.com:openairymax/<仓库名>.git
 | docs | 顶层仓 | `git@atomgit.com:openairymax/docs.git` | `main` |
 | closed-docs | 顶层仓 | `git@atomgit.com:openairymax/closed-docs.git` | `main` |
 | closed-dev-build | 顶层仓 | `git@atomgit.com:openairymax/closed-dev-build.git` | `main` |
-| atoms | 叶子仓 | `git@atomgit.com:openairymax/atoms.git` | `feature/official-hubs-01` |
-| commons | 叶子仓 | `git@atomgit.com:openairymax/commons.git` | `feature/official-hubs-01` |
-| cupolas | 叶子仓 | `git@atomgit.com:openairymax/cupolas.git` | `feature/official-hubs-01` |
-| daemons | 叶子仓 | `git@atomgit.com:openairymax/daemons.git` | `feature/official-hubs-01` |
-| gateway | 叶子仓 | `git@atomgit.com:openairymax/gateway.git` | `feature/official-hubs-01` |
-| heapstore | 叶子仓 | `git@atomgit.com:openairymax/heapstore.git` | `feature/official-hubs-01` |
-| protocols | 叶子仓 | `git@atomgit.com:openairymax/protocols.git` | `feature/official-hubs-01` |
+| atoms | 叶子仓 | `git@atomgit.com:openairymax/atoms.git` | `develop/hubs-01` |
+| commons | 叶子仓 | `git@atomgit.com:openairymax/commons.git` | `develop/hubs-01` |
+| cupolas | 叶子仓 | `git@atomgit.com:openairymax/cupolas.git` | `develop/hubs-01` |
+| daemons | 叶子仓 | `git@atomgit.com:openairymax/daemons.git` | `develop/hubs-01` |
+| gateway | 叶子仓 | `git@atomgit.com:openairymax/gateway.git` | `develop/hubs-01` |
+| heapstore | 叶子仓 | `git@atomgit.com:openairymax/heapstore.git` | `develop/hubs-01` |
+| protocols | 叶子仓 | `git@atomgit.com:openairymax/protocols.git` | `develop/hubs-01` |
 | kernel | 叶子仓 | `git@atomgit.com:openairymax/kernel.git` | `ALK-6.6-dev` |
-| memory | 叶子仓 | `git@atomgit.com:openairymax/memory.git` | `feature/official-hubs-01` |
-| security | 叶子仓 | `git@atomgit.com:openairymax/security.git` | `feature/official-hubs-01` |
-| cognition | 叶子仓 | `git@atomgit.com:openairymax/cognition.git` | `feature/official-hubs-01` |
-| services | 叶子仓 | `git@atomgit.com:openairymax/services.git` | `feature/official-hubs-01` |
-| system | 叶子仓 | `git@atomgit.com:openairymax/system.git` | `feature/official-hubs-01` |
-| cloudnative | 叶子仓 | `git@atomgit.com:openairymax/cloudnative.git` | `feature/official-hubs-01` |
-| tests-linux | 叶子仓 | `git@atomgit.com:openairymax/tests-linux.git` | `feature/official-hubs-01` |
-| sdk-python | 叶子仓 | `git@atomgit.com:openairymax/sdk-python.git` | `feature/official-hubs-01` |
-| sdk-go | 叶子仓 | `git@atomgit.com:openairymax/sdk-go.git` | `feature/official-hubs-01` |
-| sdk-rust | 叶子仓 | `git@atomgit.com:openairymax/sdk-rust.git` | `feature/official-hubs-01` |
-| sdk-typescript | 叶子仓 | `git@atomgit.com:openairymax/sdk-typescript.git` | `feature/official-hubs-01` |
-| cli | 叶子仓 | `git@atomgit.com:openairymax/cli.git` ⚠️E2 | `feature/official-hubs-01` |
-| tui | 叶子仓 | `git@atomgit.com:openairymax/tui.git` ⚠️E2 | `feature/official-hubs-01` |
-| manager | 叶子仓 | `git@atomgit.com:openairymax/manager.git` | `feature/official-hubs-01` |
-| prompts | 叶子仓 | `git@atomgit.com:openairymax/prompts.git` | `feature/official-hubs-01` |
-| markets | 叶子仓 | `git@atomgit.com:openairymax/markets.git` | `feature/official-hubs-01` |
-| skills | 叶子仓 | `git@atomgit.com:openairymax/skills.git` | `feature/official-hubs-01` |
+| memory | 叶子仓 | `git@atomgit.com:openairymax/memory.git` | `develop/hubs-01` |
+| security | 叶子仓 | `git@atomgit.com:openairymax/security.git` | `develop/hubs-01` |
+| cognition | 叶子仓 | `git@atomgit.com:openairymax/cognition.git` | `develop/hubs-01` |
+| services | 叶子仓 | `git@atomgit.com:openairymax/services.git` | `develop/hubs-01` |
+| system | 叶子仓 | `git@atomgit.com:openairymax/system.git` | `develop/hubs-01` |
+| cloudnative | 叶子仓 | `git@atomgit.com:openairymax/cloudnative.git` | `develop/hubs-01` |
+| tests-linux | 叶子仓 | `git@atomgit.com:openairymax/tests-linux.git` | `develop/hubs-01` |
+| sdk-python | 叶子仓 | `git@atomgit.com:openairymax/sdk-python.git` | `develop/hubs-01` |
+| sdk-go | 叶子仓 | `git@atomgit.com:openairymax/sdk-go.git` | `develop/hubs-01` |
+| sdk-rust | 叶子仓 | `git@atomgit.com:openairymax/sdk-rust.git` | `develop/hubs-01` |
+| sdk-typescript | 叶子仓 | `git@atomgit.com:openairymax/sdk-typescript.git` | `develop/hubs-01` |
+| cli | 叶子仓 | `git@atomgit.com:openairymax/cli.git` ⚠️E2 | `develop/hubs-01` |
+| tui | 叶子仓 | `git@atomgit.com:openairymax/tui.git` ⚠️E2 | `develop/hubs-01` |
+| manager | 叶子仓 | `git@atomgit.com:openairymax/manager.git` | `develop/hubs-01` |
+| prompts | 叶子仓 | `git@atomgit.com:openairymax/prompts.git` | `develop/hubs-01` |
+| markets | 叶子仓 | `git@atomgit.com:openairymax/markets.git` | `develop/hubs-01` |
+| skills | 叶子仓 | `git@atomgit.com:openairymax/skills.git` | `develop/hubs-01` |
 | agents | 叶子仓 | `git@atomgit.com:openairymax/agents.git` | `main` |
-| desktop | 叶子仓 | `git@atomgit.com:openairymax/desktop.git` | `feature/official-hubs-01` |
-| docker | 叶子仓 | `git@atomgit.com:openairymax/docker.git` | `feature/official-hubs-01` |
-| memoryrovol | 叶子仓 | `git@atomgit.com:spharx/memoryrovol.git` ⚠️E3 | `feature/official-hubs-01` |
+| desktop | 叶子仓 | `git@atomgit.com:openairymax/desktop.git` | `develop/hubs-01` |
+| docker | 叶子仓 | `git@atomgit.com:openairymax/docker.git` | `develop/hubs-01` |
+| memoryrovol | 叶子仓 | `git@atomgit.com:spharx/memoryrovol.git` ⚠️E3 | `develop/hubs-01` |
 
 ## 5. 分支策略
 
@@ -156,7 +156,7 @@ git@atomgit.com:openairymax/<仓库名>.git
 | 大管理仓 | `main` | agent-workload / agent-linux |
 | 管理仓 | `main` | agentrt / sdk / ecosystem / products |
 | 顶层仓 | `main` | tools / docs / closed-docs / closed-dev-build |
-| 叶子仓 | `feature/official-hubs-01` | 全部 29 个叶子仓统一使用此分支（kernel 例外：`ALK-6.6-dev`） |
+| 叶子仓 | `develop/hubs-01` | 全部 29 个叶子仓统一使用此分支（agents 例外：`main`；kernel 例外：`ALK-6.6-dev`） |
 
 > 在 `.gitmodules` 中，每个子模块均显式声明 `branch = ` 字段，确保 `git submodule update --remote` 行为可预期。
 
@@ -212,9 +212,9 @@ git submodule update --remote --recursive
 
 ```bash
 cd agent-linux
-# 1. 在远端创建 git@atomgit.com:openairymax/foo.git（feature/official-hubs-01 分支）
+# 1. 在远端创建 git@atomgit.com:openairymax/foo.git（develop/hubs-01 分支）
 # 2. 添加为子模块
-git submodule add -b feature/official-hubs-01 git@atomgit.com:openairymax/foo.git foo
+git submodule add -b develop/hubs-01 git@atomgit.com:openairymax/foo.git foo
 # 3. 提交
 git commit -am "feat: 新增 foo 叶子仓"
 git push
