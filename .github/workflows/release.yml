@@ -534,14 +534,120 @@ jobs:
           path: agentrt-${{ env.VERSION }}-linux-aarch64.tar.gz*
           if-no-files-found: error
 
-  # 汇聚五平台制品 → 签名（cosign + GPG）→ manifest 生成 → 发布
+  # 32 位 Linux（i686 / armv7l）：六架构兼容决策（2026-08-30）补全 32 位
+  # 构建门禁。经 Docker buildx + qemu 多架构容器构建（ubuntu:20.04，
+  # linux/386 与 linux/arm/v7 镜像，统一 glibc 2.31 基线；覆盖老 x86 与
+  # 树莓派 32 位用户空间——64 位内核 + 32 位用户态场景）。
+  # TUI 在 32 位 qemu 模拟下 rustc 极慢且易超时，本作业降级跳过
+  # （C/C++ 核心编译门禁仍完整），agentrt-tui 32 位制品由本地构建台
+  # build.sh i686|armv7l 交叉产物覆盖（tools/scripts/ci/release/build.sh）。
+  build-linux-32bit:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: i686
+            platform: linux/386
+            tag: platform-i686
+            artifact: linux-i686
+          - name: armv7l
+            platform: linux/arm/v7
+            tag: platform-armv7l
+            artifact: linux-armv7l
+    env:
+      BUILD_DIR: build
+      STAGE_DIR: stage
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 1
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build in ${{ matrix.name }} container
+        run: |
+          docker run --rm --platform ${{ matrix.platform }} \
+            -v "$PWD":/src -w /src ubuntu:20.04 bash -c '
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update -qq
+            apt-get install -y -qq \
+              build-essential make perl curl python3 python3-pip \
+              libsqlite3-dev libyaml-dev libcurl4-openssl-dev \
+              libssl-dev zlib1g-dev libzstd-dev libmicrohttpd-dev \
+              libwebsockets-dev libevent-dev libnghttp2-dev
+            # cmake 固定 3.29.6（同 riscv64/arm64 作业，源码构建保证确定性）
+            curl -fsSL --retry 3 -o /tmp/cmake.tar.gz \
+              https://github.com/Kitware/CMake/releases/download/v3.29.6/cmake-3.29.6.tar.gz
+            tar -xzf /tmp/cmake.tar.gz -C /tmp
+            (cd /tmp/cmake-3.29.6 && ./bootstrap --parallel="$(nproc)" --no-qt-gui --no-debugger \
+              -- -DBUILD_TESTING=OFF -DBUILD_CursesDialog:BOOL=OFF \
+              && make -j"$(nproc)" && make install)
+            curl -fsSL -o /tmp/cjson.tar.gz \
+              https://github.com/DaveGamble/cJSON/archive/refs/tags/v1.7.18.tar.gz
+            tar -xzf /tmp/cjson.tar.gz -C /tmp
+            cmake -S /tmp/cJSON-1.7.18 -B /tmp/cjson-build \
+              -DCMAKE_INSTALL_PREFIX=/usr/local \
+              -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+              -DENABLE_CJSON_TEST=OFF -DBUILD_SHARED_LIBS=ON
+            cmake --build /tmp/cjson-build --parallel
+            cmake --install /tmp/cjson-build
+            curl -fsSL -o /tmp/openssl.tar.gz \
+              https://github.com/openssl/openssl/releases/download/openssl-3.0.17/openssl-3.0.17.tar.gz
+            tar -xzf /tmp/openssl.tar.gz -C /tmp
+            (cd /tmp/openssl-3.0.17 && ./config --prefix=/usr/local \
+              --openssldir=/usr/local/ssl shared && \
+              make -j"$(nproc)" build_sw && make install_sw)
+            cmake -S agent-workload/agentrt -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release \
+              -DBUILD_TESTS=OFF -DENABLE_SANITIZERS=OFF -DAIRY_BUILD_ALL=ON \
+              -DCMAKE_INSTALL_PREFIX="$PWD/$STAGE_DIR"
+            cmake --build "$BUILD_DIR" -j"$(nproc)"
+            cmake --install "$BUILD_DIR"
+            echo "warn: ${{ matrix.name }} TUI 交叉构建在 qemu 模拟下跳过（由本地构建台产物覆盖）"
+            mkdir -p "$STAGE_DIR/lib"
+            for p in agent-workload/ecosystem/agents/airymax_agents \
+                     agent-workload/ecosystem/agents/airymax_agents_rs \
+                     agent-workload/ecosystem/agents/orchestration \
+                     agent-workload/sdk/sdk-python/agentrt; do
+              [ -d "$p" ] && cp -r "$p" "$STAGE_DIR/lib/" || true
+            done
+            '
+
+      - name: Package (tar.gz)
+        run: |
+          VERSION="${{ env.VERSION }}"; VERSION_NUM="${VERSION#v}"
+          PKG_DIR="pkg/agentrt-${VERSION_NUM}"
+          mkdir -p "${PKG_DIR}/config" "${PKG_DIR}/modules"
+          cp -rf "${{ env.STAGE_DIR }}"/. "${PKG_DIR}/" 2>/dev/null || true
+          cp -f agent-workload/ecosystem/manager/configs/agentrt.yaml "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -f agent-workload/ecosystem/manager/model/model.yaml "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -f tools/scripts/ops/templates/secrets.env.example "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -f tools/scripts/ops/templates/permission_rules.yaml "${PKG_DIR}/config/" 2>/dev/null || true
+          cp -rf agent-workload/ecosystem/markets/tools/maths-toolkit "${PKG_DIR}/modules/" 2>/dev/null || true
+          cp -f tools/scripts/ops/bin/agentrt-bootstrap.sh "${PKG_DIR}/bin/" 2>/dev/null || true
+          touch "${PKG_DIR}/${{ matrix.tag }}"
+          ARTIFACT="agentrt-${VERSION}-${{ matrix.artifact }}"
+          tar -czf "${ARTIFACT}.tar.gz" -C pkg .
+          sha256sum "${ARTIFACT}.tar.gz" > "${ARTIFACT}.tar.gz.sha256"
+          echo "artifact_name=${ARTIFACT}" >> "$GITHUB_ENV"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agentrt-${{ env.VERSION }}-${{ matrix.artifact }}
+          path: agentrt-${{ env.VERSION }}-${{ matrix.artifact }}.tar.gz*
+          if-no-files-found: error
+
+  # 汇聚六平台制品 → 签名（cosign + GPG）→ manifest 生成 → 发布
   # 官方制品仓库：atomgit.com/openairymax/agentrt（publish-release.sh 上传）；
   # GitHub Release 为镜像。双轨签名防供应链：
   #   cosign sign-blob 每个 tarball（*.sig）；GPG 签名 manifest.*.json（*.asc）。
   # 需在仓库 secrets 配置：GPG_PRIVATE_KEY/GPG_PASSPHRASE/COSIGN_PRIVATE_KEY/
   # COSIGN_PASSWORD/ATOMGIT_TOKEN（见 tools/scripts/ci/release/init-signing-keys.sh）。
   release:
-    needs: [build-linux, build-macos, build-windows, build-riscv64, build-arm64]
+    needs: [build-linux, build-macos, build-windows, build-riscv64, build-arm64, build-linux-32bit]
     runs-on: ubuntu-latest
     # tag 推送或手动 dispatch（手动时版本来自 inputs.version）皆可触发
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
