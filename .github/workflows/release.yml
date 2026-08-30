@@ -137,7 +137,7 @@ jobs:
           cp -f tools/scripts/ops/templates/permission_rules.yaml "${PKG_DIR}/config/" 2>/dev/null || true
           cp -rf agent-workload/ecosystem/markets/tools/maths-toolkit "${PKG_DIR}/modules/" 2>/dev/null || true
           touch "${PKG_DIR}/platform-x86_64"
-          ARTIFACT="agentrt-${VERSION}-linux-x86_64"
+          ARTIFACT="agentrt-${VERSION}-linux-x64"
           tar -czf "${ARTIFACT}.tar.gz" -C pkg .
           sha256sum "${ARTIFACT}.tar.gz" > "${ARTIFACT}.tar.gz.sha256"
           echo "artifact_name=${ARTIFACT}" >> "$GITHUB_ENV"
@@ -522,7 +522,7 @@ jobs:
           cp -rf agent-workload/ecosystem/markets/tools/maths-toolkit "${PKG_DIR}/modules/" 2>/dev/null || true
           cp -f tools/scripts/ops/bin/agentrt-bootstrap.sh "${PKG_DIR}/bin/" 2>/dev/null || true
           touch "${PKG_DIR}/platform-aarch64"
-          ARTIFACT="agentrt-${VERSION}-linux-aarch64"
+          ARTIFACT="agentrt-${VERSION}-linux-arm64"
           tar -czf "${ARTIFACT}.tar.gz" -C pkg .
           sha256sum "${ARTIFACT}.tar.gz" > "${ARTIFACT}.tar.gz.sha256"
           echo "artifact_name=${ARTIFACT}" >> "$GITHUB_ENV"
@@ -530,8 +530,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: agentrt-${{ env.VERSION }}-linux-aarch64
-          path: agentrt-${{ env.VERSION }}-linux-aarch64.tar.gz*
+          name: agentrt-${{ env.VERSION }}-linux-arm64
+          path: agentrt-${{ env.VERSION }}-linux-arm64.tar.gz*
           if-no-files-found: error
 
   # 32 位 Linux（i686 / armv7l）：六架构兼容决策（2026-08-30）补全 32 位
@@ -549,11 +549,11 @@ jobs:
           - name: i686
             platform: linux/386
             tag: platform-i686
-            artifact: linux-i686
+            artifact: linux-x86
           - name: armv7l
             platform: linux/arm/v7
             tag: platform-armv7l
-            artifact: linux-armv7l
+            artifact: linux-arm32
     env:
       BUILD_DIR: build
       STAGE_DIR: stage
@@ -713,8 +713,8 @@ jobs:
             下载对应平台包并解压（或直接走安装器二进制模式，自动 GPG 验签 + sha256 校验）：
 
             ```sh
-            # 以 Linux x86_64 为例；macOS → agentrt-<版本>-macos-arm64，Windows → .zip
-            AIRY_RELEASE_URL="https://atomgit.com/openairymax/agentrt/releases/download/${{ env.VERSION }}/agentrt-${{ env.VERSION }}-linux-x86_64.tar.gz" ./install.sh
+            # 以 Linux x64 为例；macOS → agentrt-<版本>-macos-arm64，Windows → .zip
+            AIRY_RELEASE_URL="https://atomgit.com/openairymax/agentrt/releases/download/${{ env.VERSION }}/agentrt-${{ env.VERSION }}-linux-x64.tar.gz" ./install.sh
             ```
 
             默认通道安装（安装器随 release 附件分发，匿名直连，一行完成
