@@ -425,7 +425,7 @@ jobs:
           if-no-files-found: error
 
   # ARM64 (linux-aarch64)：与 riscv64 同方案，经 Docker buildx + qemu 多架构
-  # 容器构建（ubuntu:20.04 arm64 镜像，统一 glibc 2.31 基线，覆盖树莓派等设备）。
+  # 容器构建（ubuntu:20.04 arm64 镜像，统一 glibc 2.31 基线，覆盖 32/64 位 ARM 等设备）。
   build-arm64:
     runs-on: ubuntu-latest
     env:
@@ -508,7 +508,7 @@ jobs:
   # 32 位 Linux（i686 / armv7l）：六架构兼容决策（2026-08-30）补全 32 位
   # 构建门禁。经 Docker buildx + qemu 多架构容器构建（ubuntu:20.04，
   # linux/386 与 linux/arm/v7 镜像，统一 glibc 2.31 基线；覆盖老 x86 与
-  # 树莓派 32 位用户空间——64 位内核 + 32 位用户态场景）。
+  # 32 位 ARM 用户空间——64 位内核 + 32 位用户态场景）。
   # TUI 在 32 位 qemu 模拟下 rustc 极慢且易超时，本作业降级跳过
   # （C/C++ 核心编译门禁仍完整），agentrt-tui 32 位制品由本地构建台
   # build.sh i686|armv7l 交叉产物覆盖（tools/scripts/ci/release/build.sh）。
