@@ -41,13 +41,39 @@ trap 'rm -rf "$WORK"' EXIT
 
 log() { echo "$@"; }
 
-# 源 clone URL：有 ATOMGIT_TOKEN 则带认证（覆盖私有仓），否则匿名
+# 脱敏 URL 内嵌凭据（git/curl 错误可能回显带 token 的 URL）
+redact() { sed 's#://[^@/]*@#://***@#g'; }
+
+# 源 clone URL：atomgit 为 SSoT。认证形式为 token 回退候选（匿名优先，
+# 避免无效 token 拖垮全部公开仓同步）。
 src_url() {
+  printf 'https://atomgit.com/%s/%s.git' "$GH_ORG" "$1"
+}
+
+src_url_authed() {
+  printf 'https://oauth2:%s@atomgit.com/%s/%s.git' "$ATOMGIT_TOKEN" "$GH_ORG" "$1"
+}
+
+# clone 失败原因必须可见：Actions 日志需 admin 才能下载，故用 ::error::
+# workflow command 写入 annotations（匿名 API 可读）。
+mirror_clone() {
+  local name="$1" dir="$2" err
+  err="$(timeout 900 git clone --mirror -q "$(src_url "$name")" "$dir" 2>&1)" && return 0
+  rm -rf "$dir"
   if [ -n "${ATOMGIT_TOKEN:-}" ]; then
-    printf 'https://oauth2:%s@atomgit.com/%s/%s.git' "$ATOMGIT_TOKEN" "$GH_ORG" "$1"
-  else
-    printf 'https://atomgit.com/%s/%s.git' "$GH_ORG" "$1"
+    err="$(timeout 900 git clone --mirror -q "$(src_url_authed "$name")" "$dir" 2>&1)" && return 0
+    rm -rf "$dir"
   fi
+  echo "::error::repo $name: atomgit clone failed: $(printf '%s' "$err" | redact | tr '\n' ' ' | tail -c 300)"
+  return 1
+}
+
+# push --mirror 到单个 remote，失败输出 ::error::（脱敏）。
+push_mirror() {
+  local name="$1" dir="$2" url="$3" label="$4" err
+  err="$(timeout 900 git -C "$dir" push --mirror -q "$url" 2>&1)" && return 0
+  echo "::error::repo $name: push $label failed: $(printf '%s' "$err" | redact | tr '\n' ' ' | tail -c 300)"
+  return 1
 }
 
 is_private() { case "$PRIVATE_LIST" in *" $1 "*) return 0 ;; *) return 1 ;; esac; }
@@ -72,32 +98,32 @@ enqueue() {
 
 ensure_github_repo() {
   gh repo view "${GH_ORG}/$1" >/dev/null 2>&1 && return 0
-  local vis="--public"
+  local vis="--public" err
   is_private "$1" && vis="--private"
   # gh 2.x 无 --confirm；非交互环境下 create 直接生效
-  if gh repo create "${GH_ORG}/$1" "$vis" >/dev/null 2>&1; then
+  if err="$(gh repo create "${GH_ORG}/$1" "$vis" 2>&1 >/dev/null)"; then
     log "  created github.com/${GH_ORG}/$1"
     return 0
   fi
-  log "  ERROR: cannot create github.com/${GH_ORG}/$1"
+  echo "::error::repo $1: gh create failed: $(printf '%s' "$err" | tr '\n' ' ' | tail -c 200)"
   return 1
 }
 
 ensure_gitee_repo() {
   curl -fsS -o /dev/null \
     "https://gitee.com/api/v5/repos/${GT_ORG}/$1?access_token=${GT_TOKEN}" && return 0
-  local vis="false"
+  local vis="false" err
   is_private "$1" && vis="true"
-  if curl -fsS -o /dev/null -X POST \
+  if err="$(curl -fsS -X POST \
       "https://gitee.com/api/v5/orgs/${GT_ORG}/repos" \
       --data-urlencode "access_token=${GT_TOKEN}" \
       --data-urlencode "name=$1" \
       --data-urlencode "private=${vis}" \
-      --data-urlencode "auto_init=false"; then
+      --data-urlencode "auto_init=false" 2>&1)"; then
     log "  created gitee.com/${GT_ORG}/$1"
     return 0
   fi
-  log "  ERROR: cannot create gitee.com/${GT_ORG}/$1"
+  echo "::error::repo $1: gitee create failed: $(printf '%s' "$err" | sed 's/access_token[^&"]*/access_token***/g' | tr '\n' ' ' | tail -c 200)"
   return 1
 }
 
@@ -109,8 +135,7 @@ sync_repo() {
   local dir="$WORK/${name}.git"
   log "=== $name ==="
 
-  if ! timeout 900 git clone --mirror -q "$(src_url "$name")" "$dir"; then
-    log "  FAIL: clone from atomgit (missing repo or token cannot read)"
+  if ! mirror_clone "$name" "$dir"; then
     FAILED+=("$name")
     return 1
   fi
@@ -123,16 +148,14 @@ sync_repo() {
 
   local rc=0
   if ensure_github_repo "$name"; then
-    timeout 900 git -C "$dir" push --mirror -q \
-      "https://x-access-token:${GH_TOKEN}@github.com/${GH_ORG}/${name}.git" \
-      || { log "  FAIL: push github"; rc=1; }
+    push_mirror "$name" "$dir" \
+      "https://x-access-token:${GH_TOKEN}@github.com/${GH_ORG}/${name}.git" github || rc=1
   else
     rc=1
   fi
   if ensure_gitee_repo "$name"; then
-    timeout 900 git -C "$dir" push --mirror -q \
-      "https://oauth2:${GT_TOKEN}@gitee.com/${GT_ORG}/${name}.git" \
-      || { log "  FAIL: push gitee"; rc=1; }
+    push_mirror "$name" "$dir" \
+      "https://oauth2:${GT_TOKEN}@gitee.com/${GT_ORG}/${name}.git" gitee || rc=1
   else
     rc=1
   fi
@@ -153,10 +176,12 @@ sync_repo() {
 # （tag 必须与 SSoT 一致，镜像语义）。
 sync_umbrella() {
   log "=== $UMBRELLA (umbrella) ==="
-  local rc=0
-  git -C "$GITHUB_WORKSPACE" fetch -q "$(src_url "$UMBRELLA")" \
-    '+refs/tags/*:refs/tags/*' \
-    || log "  warn: umbrella tags fetch from atomgit failed"
+  local rc=0 err
+  # 探针：此步成功即证明 runner 可访问 atomgit（发布 tag 只存在于 SSoT）
+  if ! err="$(timeout 300 git -C "$GITHUB_WORKSPACE" fetch -q "$(src_url "$UMBRELLA")" \
+      '+refs/tags/*:refs/tags/*' 2>&1)"; then
+    echo "::error::umbrella: atomgit tags fetch failed: $(printf '%s' "$err" | redact | tr '\n' ' ' | tail -c 300)"
+  fi
   local pair label url
   for pair in \
     "github|https://x-access-token:${GH_TOKEN}@github.com/${GH_ORG}/${UMBRELLA}.git" \
