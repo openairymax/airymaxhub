@@ -4,66 +4,31 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# GH_TOKEN：GitHub PAT（openairymax org 建仓/推送权限）——PAT 推送的
+# tag 可触发 release.yml（GITHUB_TOKEN 推送不会）。
+# GT_TOKEN：Gitee 访问令牌（org 建仓 + 推送）。
+# ATOMGIT_TOKEN（可选）：atomgit 访问令牌，用于读取私有子仓（atoms）
+# 的 mirror clone；缺省匿名克隆仅覆盖公开子仓。
+
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout with submodules
+      # 关键修复：不检出子模块。旧版 submodules:true 需要从 GitHub 拉
+      # 子模块镜像仓，而这些仓正是本工作流负责创建/更新的——循环依赖
+      # 导致 checkout 即失败（run #82，9 秒），tag 永远到不了 GitHub。
+      # 子模块数据源改为 atomgit（SSoT），见 .github/scripts/sync-mirror.sh。
+      - name: Checkout (no submodules)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: true
+          submodules: false
 
-      - name: Sync all repos to mirrors
+      - name: Sync umbrella + all submodules to mirrors
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GT_TOKEN: ${{ secrets.GT_TOKEN }}
-        run: |
-          set -e
-          # 同步 airymaxhub 自身
-          echo "=== airymaxhub ==="
-          git remote add github https://x-access-token:${GH_TOKEN}@github.com/openairymax/airymaxhub.git 2>/dev/null || true
-          git remote add gitee https://oauth2:${GT_TOKEN}@gitee.com/openairymax/airymaxhub.git 2>/dev/null || true
-          git push --all github -q
-          git push --tags github -q
-          git push --all gitee -q
-          git push --tags gitee -q
-
-          # 遍历所有子模块同步
-          git submodule foreach --recursive '
-            repo=$(basename `pwd`)
-            echo "=== $repo ==="
-
-            # 跳过闭源仓库（closed-docs / developbuild 为私有仓，
-            # 无公网镜像；docs-closed / memoryrovol / closed-dev-build
-            # / build-closed / devbuild-closed 为历史名兜底）
-            if [ "$repo" = "closed-docs" ] || [ "$repo" = "closed-dev-build" ] || \
-               [ "$repo" = "build-closed" ] || [ "$repo" = "devbuild-closed" ] || \
-               [ "$repo" = "developbuild" ] || [ "$repo" = "docs-closed" ] || \
-               [ "$repo" = "memoryrovol" ]; then
-              echo "  skip (closed source)"
-              exit 0
-            fi
-
-            # 确保 GitHub 目标仓库存在：镜像 push 到不存在的仓库会报
-            # "repository not found" 并以 set -e 中断整条同步链（实测
-            # ecosystem/agents 曾在 GitHub 缺失导致镜像停留在旧提交）。
-            # 缺失时创建为公开仓库（gh 需 org 创建权限，见 GH_TOKEN scope）。
-            if ! gh repo view "openairymax/$repo" >/dev/null 2>&1; then
-              if gh repo create "openairymax/$repo" --public --confirm >/dev/null 2>&1; then
-                echo "  created missing mirror: openairymax/$repo"
-              else
-                echo "  warn: cannot create openairymax/$repo, skipping"
-                exit 0
-              fi
-            fi
-
-            # 推送到 GitHub
-            git remote add github https://x-access-token:${GH_TOKEN}@github.com/openairymax/$repo.git 2>/dev/null || true
-            git remote add gitee https://oauth2:${GT_TOKEN}@gitee.com/openairymax/$repo.git 2>/dev/null || true
-            git push --all github -q
-            git push --tags github -q
-            git push --all gitee -q
-            git push --tags gitee -q
-            echo "  done"
-          '
+          ATOMGIT_TOKEN: ${{ secrets.ATOMGIT_TOKEN }}
+        # gh CLI 自动读取 GH_TOKEN 环境变量认证，无需 gh auth login
+        # （login 在令牌无效时会直接中断整个 step，掩盖真实错误）。
+        run: bash .github/scripts/sync-mirror.sh

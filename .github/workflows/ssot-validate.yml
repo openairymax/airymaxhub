@@ -21,11 +21,19 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout with submodules
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: false
           fetch-depth: 1
+
+      # 子模块问题修复：submodules:true 全量递归检出必失败（闭源子模块
+      # 在 GitHub 不存在）。校验仅需 docs（registry 与权威源文档）、
+      # tools（脚本本体）、agent-workload（TP-012~016 物理宿主路径）。
+      - name: Init submodules (docs, tools, agent-workload)
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: bash .github/scripts/init-submodules.sh docs tools agent-workload
 
       - name: Run validate-ssot
         run: |

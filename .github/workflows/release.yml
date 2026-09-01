@@ -34,10 +34,10 @@ jobs:
       BUILD_DIR: build
       STAGE_DIR: stage
     steps:
-      - name: Checkout with submodules
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: false
           fetch-depth: 1
 
       # 20.04 基线依赖准备：
@@ -75,6 +75,15 @@ jobs:
           (cd /tmp/openssl-3.0.17 && ./config --prefix=/usr/local \
             --openssldir=/usr/local/ssl shared && \
             make -j"$(nproc)" build_sw && make install_sw)
+
+      # 定向子模块检出（agent-workload 构建源 + tools 脚本）：不用
+      # submodules:true —— 全量递归会拉 agent-linux/kernel（~2.5GB，构建
+      # 用不到），且闭源子模块在 GitHub 不存在会使 checkout 整体失败。
+      # 依赖上一步 apt 安装的 git，故置于依赖准备之后。
+      - name: Init submodules (agent-workload, tools)
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: bash .github/scripts/init-submodules.sh agent-workload tools
 
       # 0.1.6f：依赖自编译统一收敛到 lib-builddeps.sh（SSoT，与本地
       # build.sh 同源）——自编译 OpenSSL 3.0.17 + libcurl 8.5.0 +
@@ -166,11 +175,16 @@ jobs:
       BUILD_DIR: build
       STAGE_DIR: stage
     steps:
-      - name: Checkout with submodules
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: false
           fetch-depth: 1
+
+      - name: Init submodules (agent-workload, tools)
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: bash .github/scripts/init-submodules.sh agent-workload tools
 
       - name: Install build dependencies
         run: |
@@ -251,11 +265,15 @@ jobs:
       BUILD_DIR: build
       STAGE_DIR: stage
     steps:
-      - name: Checkout with submodules
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: false
           fetch-depth: 1
+
+      - name: Init submodules (agent-workload, tools)
+        shell: bash
+        run: bash .github/scripts/init-submodules.sh agent-workload tools
 
       - name: Install build dependencies
         shell: pwsh
@@ -342,11 +360,18 @@ jobs:
       BUILD_DIR: build
       STAGE_DIR: stage
     steps:
-      - name: Checkout with submodules
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: false
           fetch-depth: 1
+
+      # 宿主机完成定向检出后再 docker run（-v "$PWD":/src 挂载需含
+      # agent-workload/ 与 tools/）
+      - name: Init submodules (agent-workload, tools)
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: bash .github/scripts/init-submodules.sh agent-workload tools
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -432,11 +457,18 @@ jobs:
       BUILD_DIR: build
       STAGE_DIR: stage
     steps:
-      - name: Checkout with submodules
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: false
           fetch-depth: 1
+
+      # 宿主机完成定向检出后再 docker run（-v "$PWD":/src 挂载需含
+      # agent-workload/ 与 tools/）
+      - name: Init submodules (agent-workload, tools)
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: bash .github/scripts/init-submodules.sh agent-workload tools
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -529,11 +561,18 @@ jobs:
       BUILD_DIR: build
       STAGE_DIR: stage
     steps:
-      - name: Checkout with submodules
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: false
           fetch-depth: 1
+
+      # 宿主机完成定向检出后再 docker run（-v "$PWD":/src 挂载需含
+      # agent-workload/ 与 tools/）
+      - name: Init submodules (agent-workload, tools)
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: bash .github/scripts/init-submodules.sh agent-workload tools
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -616,10 +655,20 @@ jobs:
       ATOMGIT_TOKEN: ${{ secrets.ATOMGIT_TOKEN }}
       ATOMGIT_REPO: openairymax/agentrt
     steps:
-      - name: Checkout (publish tooling + changelog)
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: false
+
+      # 关键修复：release job 此前完全不初始化子模块 → tools/ 为空 →
+      # publish-release.sh 不存在，发布必然失败。agent-workload 供安装器
+      # 源（agentrt/scripts/install.{sh,ps1}）与更新器源（sdk/tui/scripts/
+      # airymaxrt），tools 供发布脚本本体。
+      - name: Init submodules (agent-workload, tools)
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: bash .github/scripts/init-submodules.sh agent-workload tools
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4

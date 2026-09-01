@@ -21,11 +21,19 @@ jobs:
       BUILD_DIR: build
       COVERAGE_THRESHOLD: 55
     steps:
-      - name: Checkout with submodules
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: false
           fetch-depth: 1
+
+      # 子模块问题修复：submodules:true 全量递归会拉 agent-linux/kernel
+      # （~2.5GB）且闭源子模块在 GitHub 不存在，checkout 必然失败；
+      # 旧 cmake -S agentrt 为拆分前布局，实际路径 agent-workload/agentrt。
+      - name: Init submodules (agent-workload)
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: bash .github/scripts/init-submodules.sh agent-workload
 
       - name: Install build dependencies
         run: |
@@ -39,7 +47,7 @@ jobs:
 
       - name: Configure (ENABLE_COVERAGE=ON, BUILD_TESTS=ON)
         run: |
-          cmake -S agentrt -B ${{ env.BUILD_DIR }} \
+          cmake -S agent-workload/agentrt -B ${{ env.BUILD_DIR }} \
             -DCMAKE_BUILD_TYPE=Debug \
             -DBUILD_TESTS=ON \
             -DENABLE_COVERAGE=ON \
@@ -82,11 +90,16 @@ jobs:
     env:
       BUILD_DIR: build
     steps:
-      - name: Checkout with submodules
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: false
           fetch-depth: 1
+
+      - name: Init submodules (agent-workload)
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: bash .github/scripts/init-submodules.sh agent-workload
 
       - name: Install build dependencies (Homebrew)
         run: |
@@ -100,7 +113,7 @@ jobs:
           # 否则 find_package(CURL) 与 pkg_check_modules(libcurl) 均落空，
           # AIRY_HAS_CURL=FALSE 导致 macOS 构建静默剔除 HTTP/联网功能
           export PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig:$(brew --prefix zlib)/lib/pkgconfig:$(brew --prefix sqlite)/lib/pkgconfig:$(brew --prefix curl)/lib/pkgconfig"
-          cmake -S agentrt -B ${{ env.BUILD_DIR }} \
+          cmake -S agent-workload/agentrt -B ${{ env.BUILD_DIR }} \
             -DCMAKE_BUILD_TYPE=Debug \
             -DBUILD_TESTS=ON \
             -DAIRY_BUILD_ALL=ON \
@@ -120,11 +133,16 @@ jobs:
     env:
       BUILD_DIR: build
     steps:
-      - name: Checkout with submodules
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: false
           fetch-depth: 1
+
+      - name: Init submodules (agent-workload)
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: bash .github/scripts/init-submodules.sh agent-workload
 
       - name: Install dependencies (vcpkg)
         shell: pwsh
@@ -135,8 +153,9 @@ jobs:
           vcpkg install sqlite3 cjson libyaml curl openssl zlib libmicrohttpd libwebsockets libevent --triplet x64-windows
 
       - name: Configure (MSVC)
+        shell: pwsh
         run: |
-          cmake -S agentrt -B ${{ env.BUILD_DIR }} `
+          cmake -S agent-workload/agentrt -B ${{ env.BUILD_DIR }} `
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" `
             -DBUILD_TESTS=ON -DAIRY_BUILD_ALL=ON -DCMAKE_BUILD_TYPE=Release
 
@@ -149,7 +168,12 @@ jobs:
           ctest --test-dir ${{ env.BUILD_DIR }} -C Release --output-on-failure
 
   # ==================== MemoryRovol 独立构建门禁（OSS + PRO） ====================
+  # 禁用：memoryrovol 为闭源仓（.gitmodules update=none，GitHub 不存在，
+  # 仅 atomgit 私有可达），GitHub Actions 无法检出源码；旧路径
+  # products/memoryrovol 亦为拆分前布局（现 agent-workload/products/）。
+  # 该门禁由本地构建台执行（tools/scripts/ci 体系），不在 GitHub 镜像侧运行。
   memoryrovol-build:
+    if: false
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -172,7 +196,7 @@ jobs:
           if [ "${{ matrix.mode }}" = "oss" ]; then
             CMAKE_EXTRA="-DMEMORYROVOL_OSS=ON"
           fi
-          cmake -S products/memoryrovol -B build \
+          cmake -S agent-workload/products/memoryrovol -B build \
             -DBUILD_TESTS=ON -DWARNINGS_AS_ERRORS=ON ${CMAKE_EXTRA}
 
       - name: Build
