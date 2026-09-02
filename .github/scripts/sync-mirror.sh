@@ -11,8 +11,11 @@
 #   3. set -e 下单仓推送失败中断整条同步链，无汇总、无隔离。
 #
 # 新模型：
-#   - 源 = atomgit（SSoT）：clone --mirror + push --mirror（全 refs，
-#     镜像语义）。公开子仓匿名可读；私有子仓（atoms）需 ATOMGIT_TOKEN。
+#   - 源 = atomgit（SSoT）：clone --mirror 抓全量 refs 后，push 只同步
+#     heads + tags（force 保证与 SSoT 一致）——不用 push --mirror，
+#     atomgit 平台内部 ref（refs/merge-requests/*、refs/keep-around/*）
+#     不应外泄到 GitHub/Gitee。公开子仓匿名可读；私有子仓（atoms）需
+#     ATOMGIT_TOKEN。
 #   - 子模块树以各仓 HEAD:.gitmodules 动态 BFS 解析，新增子模块零维护。
 #   - GitHub 缺仓用 gh CLI 创建；Gitee 缺仓用 API v5 创建；私有名单
 #     （atoms）建私有，防内容泄露。
@@ -21,6 +24,10 @@
 #     镜像已全部就绪（release.yml 从 GitHub 拉子模块）。
 
 set -uo pipefail
+
+# 凭据缺失时快速失败而非挂在交互式提示上（Actions 无 tty，git 会
+# 反复重试 "could not read Username" 拖满超时）
+export GIT_TERMINAL_PROMPT=0
 
 GH_ORG="openairymax"
 GT_ORG="openairymax"
@@ -68,10 +75,13 @@ mirror_clone() {
   return 1
 }
 
-# push --mirror 到单个 remote，失败输出 ::error::（脱敏）。
+# push 到单个 remote：只同步 heads + tags（force 保证与 SSoT 一致）。
+# 不用 push --mirror —— atomgit 仓含平台内部 ref（refs/merge-requests/*、
+# refs/keep-around/*），--mirror 会把这些垃圾 ref 灌进 GitHub/Gitee。
 push_mirror() {
   local name="$1" dir="$2" url="$3" label="$4" err
-  err="$(timeout 900 git -C "$dir" push --mirror -q "$url" 2>&1)" && return 0
+  err="$(timeout 900 git -C "$dir" push -q -f "$url" \
+      'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*' 2>&1)" && return 0
   echo "::error::repo $name: push $label failed: $(printf '%s' "$err" | redact | tr '\n' ' ' | tail -c 300)"
   return 1
 }
@@ -127,7 +137,7 @@ ensure_gitee_repo() {
   return 1
 }
 
-# 单仓同步：atomgit mirror clone → push --mirror 到 GitHub + Gitee。
+# 单仓同步：atomgit mirror clone → push heads+tags 到 GitHub + Gitee。
 # 克隆后读 HEAD:.gitmodules 将嵌套子模块入队（BFS）；目录用完即删（控磁盘，
 # kernel 仓 mirror 约 2.5GB）。
 sync_repo() {
