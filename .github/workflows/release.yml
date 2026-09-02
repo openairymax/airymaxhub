@@ -736,6 +736,6 @@ jobs:
             ```
 
             或直接解压 tarball 后：
-            - `bin/agentrt-bootstrap.sh start` 一键启动 18 个 daemon
+            - `bin/agentrt-bootstrap.sh start` 一键启动 15 个 daemon
             - `bin/airy_cli` 进入 CLI 交互界面（或 `airymaxrt`）
           files: dist/*
