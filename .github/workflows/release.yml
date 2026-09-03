@@ -208,6 +208,11 @@ jobs:
       - name: Configure
         run: |
           export PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig:$(brew --prefix zlib)/lib/pkgconfig:$(brew --prefix sqlite)/lib/pkgconfig:$(brew --prefix curl)/lib/pkgconfig"
+          # brew openssl 为 keg-only：libwebsockets.h 直接 #include <openssl/ssl.h>
+          # 不经 pkg-config 的 TU 需要显式 -I/-L（CFLAGS/LDFLAGS 是
+          # CMAKE_C_FLAGS / CMAKE_EXE_LINKER_FLAGS 的环境初值，全 target 生效）
+          export CFLAGS="-I$(brew --prefix openssl)/include"
+          export LDFLAGS="-L$(brew --prefix openssl)/lib"
           cmake -S agent-workload/agentrt -B ${{ env.BUILD_DIR }} \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_TESTS=OFF \
