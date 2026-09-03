@@ -75,6 +75,49 @@ mirror_clone() {
   return 1
 }
 
+# 远端"默认分支"落在待删陈旧清单里时，先经平台 API 把默认切到 SSoT 分支：
+# GitHub/Gitee 都无条件拒绝删除当前默认分支（receive.denyDeleteCurrent），
+# run #90 本地复现实证：Gitee 23 仓默认分支仍是历史名 develop，删除被拒
+# 且 stderr 曾被 2>/dev/null 吞掉、零告警，随后强推 develop/hubs-01 撞
+# refname 层级冲突 → 整仓失败。API 只 warn 不致命：失败时回退旧行为。
+reset_stale_default() {
+  local dir="$1" url="$2" label="$3" name="$4" stale="$5"
+  local tok api resp cur new err
+  case "$label" in
+    github) tok="${GH_TOKEN:-}"; api="https://api.github.com/repos/${GH_ORG}/${name}" ;;
+    gitee)  tok="${GT_TOKEN:-}"; api="https://gitee.com/api/v5/repos/${GT_ORG}/${name}" ;;
+    *) return 0 ;;
+  esac
+  [ -n "$tok" ] || return 0
+  if [ "$label" = github ]; then
+    resp="$(curl -fsS -H "Authorization: Bearer ${tok}" "$api" 2>/dev/null)"
+  else
+    resp="$(curl -fsS "${api}?access_token=${tok}" 2>/dev/null)"
+  fi
+  cur="$(printf '%s' "$resp" | grep -o '"default_branch":[ ]*"[^"]*"' \
+        | head -1 | sed -E 's/.*"([^"]*)"$/\1/')"
+  [ -n "$cur" ] || return 0
+  printf '%s\n' "$stale" | grep -qxF "$cur" || return 0
+  new="$(git -C "$dir" for-each-ref --format='%(refname:strip=2)' refs/heads/ \
+        | grep -Fx main || true)"
+  [ -n "$new" ] || new="$(git -C "$dir" for-each-ref --format='%(refname:strip=2)' \
+        refs/heads/ | head -1)"
+  [ -n "$new" ] || return 0
+  if [ "$label" = github ]; then
+    err="$(curl -fsS -X PATCH "$api" -H "Authorization: Bearer ${tok}" \
+        -H "Accept: application/vnd.github+json" \
+        -d "{\"default_branch\":\"${new}\"}" 2>&1)"
+  else
+    err="$(curl -fsS -X PATCH "$api" -H "Content-Type: application/json" \
+        -d "{\"access_token\":\"${tok}\",\"name\":\"${name}\",\"default_branch\":\"${new}\"}" 2>&1)"
+  fi
+  if [ $? -ne 0 ]; then
+    log "  warn: repo $name: $label set default branch to '$new' failed: $(printf '%s' "$err" | redact | tr '\n' ' ' | tail -c 160)"
+    return 0
+  fi
+  log "  $label: repo $name default branch '$cur' is stale -> switched to '$new'"
+}
+
 # push 到单个 remote：只同步 heads + tags（force 保证与 SSoT 一致）。
 # 不用 push --mirror —— atomgit 仓含平台内部 ref（refs/merge-requests/*、
 # refs/keep-around/*），--mirror 会把这些垃圾 ref 灌进 GitHub/Gitee。
@@ -88,10 +131,15 @@ push_mirror() {
       <(git -C "$dir" for-each-ref --format='%(refname:strip=2)' refs/heads/ | sort) \
       <(git ls-remote --heads "$url" 2>/dev/null \
         | awk '{print $2}' | sed 's|^refs/heads/||' | sort))"
-  for r in $stale; do
-    timeout 300 git -C "$dir" push -q "$url" ":refs/heads/$r" 2>/dev/null \
-      || log "  warn: repo $name: $label delete stale branch '$r' failed"
-  done
+  if [ -n "$stale" ]; then
+    reset_stale_default "$dir" "$url" "$label" "$name" "$stale"
+    for r in $stale; do
+      # 删除失败原因必须可见（#90 教训：2>/dev/null 吞掉了
+      # "refusing to delete the current branch" 的定性证据）
+      err="$(timeout 300 git -C "$dir" push -q "$url" ":refs/heads/$r" 2>&1)" \
+        || log "  warn: repo $name: $label delete stale branch '$r' failed: $(printf '%s' "$err" | redact | tr '\n' ' ' | tail -c 160)"
+    done
+  fi
   err="$(timeout 900 git -C "$dir" push -q -f "$url" \
       'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*' 2>&1)" && return 0
   echo "::error::repo $name: push $label failed: $(printf '%s' "$err" | redact | tr '\n' ' ' | tail -c 300)"
