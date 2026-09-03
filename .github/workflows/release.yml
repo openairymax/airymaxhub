@@ -553,9 +553,12 @@ jobs:
           if-no-files-found: error
 
   # 32 位 Linux（i686 / armv7l）：六架构兼容决策（2026-08-30）补全 32 位
-  # 构建门禁。经 Docker buildx + qemu 多架构容器构建（ubuntu:20.04，
-  # linux/386 与 linux/arm/v7 镜像，统一 glibc 2.31 基线；覆盖老 x86 与
-  # 32 位 ARM 用户空间——64 位内核 + 32 位用户态场景）。
+  # 构建门禁。经 Docker buildx + qemu 多架构容器构建，统一 glibc 2.31
+  # 基线；覆盖老 x86 与 32 位 ARM 用户空间——64 位内核 + 32 位用户态场景。
+  # 镜像按架构分选：ubuntu:20.04 官方镜像无 linux/386 清单（v0.1.9
+  # Release run 实证 "no matching manifest for linux/386"），i686 改用
+  # debian:bullseye（glibc 2.31 与 focal 同基线，有 i386 清单）；
+  # armv7l 维持 ubuntu:20.04（有 linux/arm/v7 清单）。
   # TUI 在 32 位 qemu 模拟下 rustc 极慢且易超时，本作业降级跳过
   # （C/C++ 核心编译门禁仍完整），agentrt-tui 32 位制品由本地构建台
   # build.sh i686|armv7l 交叉产物覆盖（tools/scripts/ci/release/build.sh）。
@@ -566,10 +569,12 @@ jobs:
         include:
           - name: i686
             platform: linux/386
+            image: debian:bullseye
             tag: platform-i686
             artifact: linux-x86
           - name: armv7l
             platform: linux/arm/v7
+            image: ubuntu:20.04
             tag: platform-armv7l
             artifact: linux-arm32
     env:
@@ -595,11 +600,11 @@ jobs:
       - name: Build in ${{ matrix.name }} container
         run: |
           docker run --rm --platform ${{ matrix.platform }} \
-            -v "$PWD":/src -w /src ubuntu:20.04 bash -c '
+            -v "$PWD":/src -w /src ${{ matrix.image }} bash -c '
             export DEBIAN_FRONTEND=noninteractive
             apt-get update -qq
             apt-get install -y -qq \
-              build-essential make perl curl python3 python3-pip \
+              build-essential make perl curl python3 python3-pip python3-venv \
               libsqlite3-dev libyaml-dev libcurl4-openssl-dev \
               libssl-dev zlib1g-dev libzstd-dev libmicrohttpd-dev \
               libwebsockets-dev libevent-dev libnghttp2-dev
