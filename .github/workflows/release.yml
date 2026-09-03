@@ -34,6 +34,15 @@ jobs:
       BUILD_DIR: build
       STAGE_DIR: stage
     steps:
+      # ubuntu:20.04 基础镜像无 git：actions/checkout 会回退到 REST tarball
+      # 下载（工作区无 .git），导致后续 git submodule 报
+      # "fatal: not a git repository"（v0.1.9 Release run 实证）。
+      # 必须在 Checkout 之前于容器内装 git + CA 证书。
+      - name: Prepare container (git for checkout)
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends git ca-certificates
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
