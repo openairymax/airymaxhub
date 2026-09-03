@@ -38,10 +38,14 @@ jobs:
       # 下载（工作区无 .git），导致后续 git submodule 报
       # "fatal: not a git repository"（v0.1.9 Release run 实证）。
       # 必须在 Checkout 之前于容器内装 git + CA 证书。
+      # 容器步骤以 root 运行而挂载工作区属 uid 1001，submodule init 报
+      # "detected dubious ownership"（v0.1.9 Release run 二次实证）；
+      # 写系统级 safe.directory（/etc/gitconfig）， HOME 无关。
       - name: Prepare container (git for checkout)
         run: |
           apt-get update -qq
           apt-get install -y -qq --no-install-recommends git ca-certificates
+          git config --system --add safe.directory '*'
 
       - name: Checkout
         uses: actions/checkout@v4
