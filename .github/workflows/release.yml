@@ -282,6 +282,8 @@ jobs:
 
       - name: Init submodules (agent-workload, tools)
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: bash .github/scripts/init-submodules.sh agent-workload tools
 
       - name: Install build dependencies
