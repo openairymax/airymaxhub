@@ -139,11 +139,16 @@ jobs:
       #   bin/agentrt-tui（Rust TUI）+ lib/（Python 运行时依赖）
       # CARGO_TARGET_DIR 指向 RUNNER_TEMP，禁止在源码树落盘（铁律 4.7）。
       # TUI 构建失败仅告警降级，不阻断发布（闭源/工具链缺省容错同哲学）。
+      # build-linux 用 container ubuntu:20.04，run 默认 shell 为 dash：
+      # `source` 非 POSIX 内建会静默失败导致 cargo 丢失（exit 127），
+      # 统一改 PATH 注入；构建命令加 if ! 守卫兑现降级契约。
       - name: Build TUI + copy Python runtime
         run: |
-          source "$HOME/.cargo/env" 2>/dev/null || true
+          export PATH="$HOME/.cargo/bin:$PATH"
           export CARGO_TARGET_DIR="$RUNNER_TEMP/tui-target"
-          (cd agent-workload/sdk/tui && cargo build --release)
+          if ! (cd agent-workload/sdk/tui && cargo build --release); then
+            echo "warn: linux TUI 构建失败（降级）"
+          fi
           cp -f "$CARGO_TARGET_DIR/release/agentrt-tui" "${{ env.STAGE_DIR }}/bin/" 2>/dev/null || echo "warn: TUI 构建产物缺失（降级）"
           mkdir -p "${{ env.STAGE_DIR }}/lib"
           for p in agent-workload/ecosystem/agents/airymax_agents \
@@ -237,9 +242,11 @@ jobs:
 
       - name: Build TUI + copy Python runtime
         run: |
-          source "$HOME/.cargo/env" 2>/dev/null || true
+          export PATH="$HOME/.cargo/bin:$PATH"
           export CARGO_TARGET_DIR="$RUNNER_TEMP/tui-target"
-          (cd agent-workload/sdk/tui && cargo build --release)
+          if ! (cd agent-workload/sdk/tui && cargo build --release); then
+            echo "warn: macos TUI 构建失败（降级）"
+          fi
           cp -f "$CARGO_TARGET_DIR/release/agentrt-tui" "${{ env.STAGE_DIR }}/bin/" 2>/dev/null || echo "warn: TUI 构建产物缺失（降级）"
           mkdir -p "${{ env.STAGE_DIR }}/lib"
           for p in agent-workload/ecosystem/agents/airymax_agents \
