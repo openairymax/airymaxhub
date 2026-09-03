@@ -79,7 +79,19 @@ mirror_clone() {
 # 不用 push --mirror —— atomgit 仓含平台内部 ref（refs/merge-requests/*、
 # refs/keep-around/*），--mirror 会把这些垃圾 ref 灌进 GitHub/Gitee。
 push_mirror() {
-  local name="$1" dir="$2" url="$3" label="$4" err
+  local name="$1" dir="$2" url="$3" label="$4" err stale r
+  # 预删目标端陈旧分支：SSoT 已不存在的分支（如 Gitee 镜像遗留的
+  # develop）会与 SSoT 的 develop/hubs-01 构成 refname 层级冲突，
+  # 令整笔 push 以 "remote rejected (refname conflict)" 被拒
+  # （run #89 实证 23 仓）。镜像语义 = 与 SSoT 完全一致，删。
+  stale="$(comm -13 \
+      <(git -C "$dir" for-each-ref --format='%(refname:strip=2)' refs/heads/ | sort) \
+      <(git ls-remote --heads "$url" 2>/dev/null \
+        | awk '{print $2}' | sed 's|^refs/heads/||' | sort))"
+  for r in $stale; do
+    timeout 300 git -C "$dir" push -q "$url" ":refs/heads/$r" 2>/dev/null \
+      || log "  warn: repo $name: $label delete stale branch '$r' failed"
+  done
   err="$(timeout 900 git -C "$dir" push -q -f "$url" \
       'refs/heads/*:refs/heads/*' 'refs/tags/*:refs/tags/*' 2>&1)" && return 0
   echo "::error::repo $name: push $label failed: $(printf '%s' "$err" | redact | tr '\n' ' ' | tail -c 300)"
