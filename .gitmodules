@@ -19,8 +19,6 @@
 	path = tools
 	url = ../tools.git
 	branch = main
-[submodule "developbuild"]
-	path = developbuild
-	url = git@atomgit.com:openairymax/developbuild.git
-	branch = main
-	update = none
+# developbuild（发布工作区：离线包/install 快照/构建缓存）已迁出源码区，
+# 现为伞仓同级 works-engineering/developbuild 独立仓（铁律：严禁在 airymaxhub
+# 源码区内构建或存放构建产物）。构建/发布脚本经 AIRY_WORKSPACE 定位该目录。
