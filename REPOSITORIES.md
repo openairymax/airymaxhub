@@ -98,7 +98,7 @@ git@atomgit.com:openairymax/<仓库名>.git
 | 编号 | 仓库名 | 实际 URL | 原因 |
 |------|--------|----------|------|
 | **E1** | `agentrt`（管理仓） | `git@atomgit.com:openairymax/agentos.git` | 历史保留：agentrt 管理仓的 git 远端名沿用改名前的 `agentos.git`，用户决策保持不变（内部代码前缀 `agentos_→agentrt_→airy_` 已完成两阶段改名，但 git remote 名保留） |
-| **E2** | `cli` / `tui`（sdk 叶子仓） | `git@atomgit.com:openairymax/cli.git` / `tui.git` | 命名约定：cli 与 tui 作为用户直接交互的独立工具，URL 不带 `sdk-` 前缀（区别于 sdk-python / sdk-go / sdk-rust / sdk-typescript 等语言绑定 SDK） |
+| **E2** | `console` / `tui`（sdk 叶子仓） | `git@atomgit.com:openairymax/console.git` / `tui.git` | 命名约定：console 与 tui 作为用户直接交互的独立组件，URL 不带 `sdk-` 前缀（区别于 sdk-python / sdk-go / sdk-rust / sdk-typescript 等语言绑定 SDK） |
 | **E3** | `memoryrovol`（products 叶子仓） | `git@atomgit.com:spharx/memoryrovol.git` | 组织归属：memoryrovol 归属 `spharx` 个人组织而非 `openairymax` 组织（商业隔离层，B 类语义） |
 | **E4** | `agent-linux`（大管理仓） | `git@atomgit.com:openairymax/agent-linux.git` | v0.1.3 由 `agentrt-linux` 改名；本地目录/引用与远程仓均已同步 |
 | **E5** | `agent-workload`（大管理仓） | `git@atomgit.com:openairymax/agent-workload.git` | v0.1.4 由 `agent-runtim` 改名；本地目录/引用与远程仓均已同步 |
@@ -139,7 +139,7 @@ git@atomgit.com:openairymax/<仓库名>.git
 | sdk-go | 叶子仓 | `git@atomgit.com:openairymax/sdk-go.git` | `develop/hubs-01` |
 | sdk-rust | 叶子仓 | `git@atomgit.com:openairymax/sdk-rust.git` | `develop/hubs-01` |
 | sdk-typescript | 叶子仓 | `git@atomgit.com:openairymax/sdk-typescript.git` | `develop/hubs-01` |
-| cli | 叶子仓 | `git@atomgit.com:openairymax/cli.git` ⚠️E2 | `develop/hubs-01` |
+| console | 叶子仓 | `git@atomgit.com:openairymax/console.git` ⚠️E2 | `develop/hubs-01` |
 | tui | 叶子仓 | `git@atomgit.com:openairymax/tui.git` ⚠️E2 | `develop/hubs-01` |
 | manager | 叶子仓 | `git@atomgit.com:openairymax/manager.git` | `develop/hubs-01` |
 | prompts | 叶子仓 | `git@atomgit.com:openairymax/prompts.git` | `develop/hubs-01` |
