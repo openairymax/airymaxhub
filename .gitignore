@@ -1,6 +1,6 @@
 # OpenAirymax 伞仓
 # 策略：非必要不追踪，各子模块自行维护.gitignore
-# 默认忽略所有
+# 默认忽略所有文件
 *
 # 伞仓必要文件（白名单）
 !.gitignore
@@ -11,9 +11,6 @@
 !LICENSE
 # 伞仓必要文档（社区/安全/Docker 构建依赖，须入库）
 !.dockerignore
-!CODE_OF_CONDUCT.md
-!CONTRIBUTING.md
-!SECURITY.md
 # 伞仓直属模块（非 submodule，需完整追踪）
 !.github/
 !.github/**
