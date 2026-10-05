@@ -23,9 +23,7 @@ The `airymaxhub` umbrella repo:
 
 Scan the QR code to join our Feishu (Lark) group:
 
-<div align="left">
-  <img src=".github/image/openairymax-feishu.jpg" alt="Community QR code" width="150" />
-</div>
+
 
 ## License
 
