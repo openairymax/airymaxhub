@@ -1,6 +1,6 @@
 # =============================================================================
 # Airymax 伞仓根 .dockerignore
-# 构建上下文为伞仓根（airymaxhub/），供 products/docker/*.Dockerfile 使用
+# 构建上下文为伞仓根（airymaxhub/），供 sdk/docker/*.Dockerfile 使用
 # =============================================================================
 
 # Git
@@ -19,7 +19,7 @@
 # 文档（Dockerfile 需要 README 时单独 COPY）
 docs/
 *.md
-!products/desktop/README.md
+!sdk/desktop/README.md
 
 # 测试与 CI 产物
 __pycache__/

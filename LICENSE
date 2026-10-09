@@ -53,11 +53,12 @@ The five layers, in order of increasing restrictiveness, are:
 
   L3. OPEN-SOURCE CORE LAYER (dual-licensed, copyleft-friendly)
       ---------------------------------------------------------
-      Paths:      agentrt/                 (8 sub-repos)
-                  sdk/                     (7 sub-repos)
-                  ecosystem/               (6 sub-repos)
-                  products/docker/         (container deployment)
-                  products/desktop/        (desktop client)
+      Paths:      agentrt/                 (6 sub-repos)
+                  sdk/                     (8 sub-repos)
+                  ecosystem/               (5 sub-repos)
+                  sdk/docker/              (container deployment)
+                  sdk/desktop/             (desktop client)
+                  products/cupolas/        (security framework)
                   agent-linux/           (8 sub-repos, EXCLUDING kernel)
                   tools/
                   cmake/
@@ -104,13 +105,13 @@ For a quick reference, see the table below:
   ------+------------------------------------------------------------+---------------------------
   L1    | docs/OpenStandards/LICENSE                                 | CC-BY-4.0
   L2    | docs/LICENSE                                               | CC-BY-NC-4.0
-  L3    | agent-workload/agentrt/LICENSE, agent-workload/agentrt/{atoms,commons,cupolas,daemons,   | AGPL-3.0-or-later
+  L3    | agent-workload/agentrt/LICENSE, agent-workload/agentrt/{atoms,commons,daemons,   | AGPL-3.0-or-later
         |   gateway,heapstore,protocols}/LICENSE,                     |   OR Apache-2.0
-        | agent-workload/sdk/LICENSE, agent-workload/sdk/{cli,sdk-go,sdk-python,sdk-rust,          |
-        |   sdk-typescript,tui}/LICENSE,                              |
+        | agent-workload/sdk/LICENSE, agent-workload/sdk/{console,desktop,docker,sdk-go,   |
+        |   sdk-python,sdk-rust,sdk-typescript,tui}/LICENSE,          |
         | agent-workload/ecosystem/LICENSE, agent-workload/ecosystem/{agents,manager,markets,       |
         |   prompts,skills}/LICENSE,                                  |
-        | agent-workload/products/{docker,desktop}/LICENSE,           |
+        | agent-workload/products/cupolas/LICENSE,                    |
         | agent-linux/LICENSE, agent-linux/{cloudnative,cognition,   |
         |   memory,security,services,system,tests-linux}/LICENSE,    |
         | tools/LICENSE                                               |
