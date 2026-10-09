@@ -14,12 +14,12 @@ OpenAirymax 采用 **伞仓 + 双工程大管理仓 + 管理仓 + 叶子仓 + �
 | 伞仓（umbrella） | 1 | `airymaxhub`，聚合 6 个管理仓 |
 | 大管理仓（super-management） | 2 | `agent-workload`（用户态工程，v0.1.4 由 agent-runtim 改名）/ `agent-linux`（内核态工程，原 agentrt-linux），各自通过 `.gitmodules` 管理其下管理仓/叶子仓 |
 | 管理仓（management） | 4 | `agentrt` / `sdk` / `ecosystem` / `products`，位于 agent-workload 下，各自通过 `.gitmodules` 管理叶子仓 |
-| 叶子仓（leaf） | 30 | 分布在 4 个管理仓下（7 + 6 + 6 + 3）与 agent-linux 下（9） |
+| 叶子仓（leaf） | 30 | 分布在 4 个管理仓下（6 + 8 + 5 + 2）与 agent-linux 下（9） |
 | 顶层仓（top-level） | 4 | `tools`（v0.1.4 由 devtools 改名）/ `docs` / `closed-docs` / `closed-dev-build`，直属伞仓 |
-| **合计** | **39** | — |
+| **合计** | **41** | — |
 
 > **双工程结构（v0.1.3 决策，v0.1.4 更名）**：区分用户态工程与内核态工程——
-> - **agent-workload**（用户态）：agentrt（核心运行时）+ ecosystem（生态）+ products（产品）+ sdk（开发者 SDK）
+> - **agent-workload**（用户态）：agentrt（核心运行时）+ ecosystem（生态）+ products（策略模块聚合）+ sdk（开发者 SDK）
 > - **agent-linux**（内核态）：AirymaxOS 智能体操作系统（kernel + services + system + cloudnative 等 9 叶子仓）
 > 两者构建层面零互相引用，通过 IRON-9 共享契约层（[SC] 字节级一致）与语义同源层（[SS]）协作。
 
@@ -32,7 +32,6 @@ airymaxhub/                                     # 伞仓（git@atomgit.com:opena
 │   ├── agentrt/      [管理仓] → agentos.git（历史保留 URL，见 §4 E1）
 │   │   ├── atoms/       [叶子仓]                  # A 类微核心原语（corekern/syscall/memory/taskflow）
 │   │   ├── commons/     [叶子仓]
-│   │   ├── cupolas/     [叶子仓]                  # 安全框架
 │   │   ├── daemons/     [叶子仓]
 │   │   ├── gateway/     [叶子仓]
 │   │   ├── heapstore/   [叶子仓]                  # 内存引擎
@@ -42,10 +41,10 @@ airymaxhub/                                     # 伞仓（git@atomgit.com:opena
 │   │   └── LICENSES/    [直属目录]                # SPDX 许可文本
 │   ├── ecosystem/      [管理仓] → ecosystem.git
 │   │   └── manager/ · prompts/ · markets/ · skills/ · agents/  [叶子仓 ×5]
-│   ├── products/       [管理仓] → products.git
-│   │   └── desktop/ · docker/ · memoryrovol/      [叶子仓 ×3]
+│   ├── products/       [管理仓] → products.git       # 策略模块聚合（机制/策略分离）
+│   │   └── memoryrovol/ · cupolas/ · lang_gateway/  [叶子仓 ×2 + 内联模块 ×1]
 │   └── sdk/            [管理仓] → sdk.git
-│       └── sdk-python/ · sdk-go/ · sdk-rust/ · sdk-typescript/ · cli/ · tui/  [叶子仓 ×6]
+│       └── sdk-python/ · sdk-go/ · sdk-rust/ · sdk-typescript/ · console/ · tui/ · desktop/ · docker/  [叶子仓 ×8]
 │
 ├── agent-linux/     [大管理仓] → agent-linux.git   # 内核态工程（原 agentrt-linux，v0.1.3 改名）
 │   ├── kernel/              [叶子仓]               # Linux 6.6 + sched_tac + eBPF + io_uring + Rust
@@ -77,11 +76,11 @@ airymaxhub/                                     # 伞仓（git@atomgit.com:opena
 |---|----------|----------|------------|------|
 | 1 | `airymaxhub/.gitmodules` | 6 | 大管理仓 + 顶层仓 | agent-workload, agent-linux, docs, closed-docs, tools, closed-dev-build |
 | 2 | `agent-workload/.gitmodules` | 4 | 管理仓 | agentrt, ecosystem, products, sdk |
-| 3 | `agent-workload/agentrt/.gitmodules` | 7 | 叶子仓 | atoms, commons, cupolas, daemons, gateway, heapstore, protocols |
+| 3 | `agent-workload/agentrt/.gitmodules` | 6 | 叶子仓 | atoms, commons, daemons, gateway, heapstore, protocols |
 | 4 | `agent-linux/.gitmodules` | 9 | 叶子仓 | kernel, memory, security, cognition, services, system, cloudnative, tests-linux, distro |
-| 5 | `agent-workload/sdk/.gitmodules` | 6 | 叶子仓 | sdk-python, sdk-go, sdk-rust, sdk-typescript, cli, tui |
+| 5 | `agent-workload/sdk/.gitmodules` | 8 | 叶子仓 | sdk-python, sdk-go, sdk-rust, sdk-typescript, console, tui, desktop, docker |
 | 6 | `agent-workload/ecosystem/.gitmodules` | 5 | 叶子仓 | manager, prompts, markets, skills, agents |
-| 7 | `agent-workload/products/.gitmodules` | 3 | 叶子仓 | desktop, docker, memoryrovol |
+| 7 | `agent-workload/products/.gitmodules` | 2 | 叶子仓 | memoryrovol, cupolas |
 
 > 顶层仓（tools / docs / closed-docs / closed-dev-build）为单仓，不含 `.gitmodules`。
 
@@ -98,7 +97,7 @@ git@atomgit.com:openairymax/<仓库名>.git
 | 编号 | 仓库名 | 实际 URL | 原因 |
 |------|--------|----------|------|
 | **E1** | `agentrt`（管理仓） | `git@atomgit.com:openairymax/agentos.git` | 历史保留：agentrt 管理仓的 git 远端名沿用改名前的 `agentos.git`，用户决策保持不变（内部代码前缀 `agentos_→agentrt_→airy_` 已完成两阶段改名，但 git remote 名保留） |
-| **E2** | `console` / `tui`（sdk 叶子仓） | `git@atomgit.com:openairymax/console.git` / `tui.git` | 命名约定：console 与 tui 作为用户直接交互的独立组件，URL 不带 `sdk-` 前缀（区别于 sdk-python / sdk-go / sdk-rust / sdk-typescript 等语言绑定 SDK） |
+| **E2** | `console` / `tui` / `desktop` / `docker`（sdk 叶子仓） | `git@atomgit.com:openairymax/console.git` / `tui.git` / `desktop.git` / `docker.git` | 命名约定：console / tui / desktop / docker 作为面向用户的交互组件与交付载体，URL 不带 `sdk-` 前缀（区别于 sdk-python / sdk-go / sdk-rust / sdk-typescript 等语言绑定 SDK） |
 | **E3** | `memoryrovol`（products 叶子仓） | `git@atomgit.com:spharx/memoryrovol.git` | 组织归属：memoryrovol 归属 `spharx` 个人组织而非 `openairymax` 组织（商业隔离层，B 类语义） |
 | **E4** | `agent-linux`（大管理仓） | `git@atomgit.com:openairymax/agent-linux.git` | v0.1.3 由 `agentrt-linux` 改名；本地目录/引用与远程仓均已同步 |
 | **E5** | `agent-workload`（大管理仓） | `git@atomgit.com:openairymax/agent-workload.git` | v0.1.4 由 `agent-runtim` 改名；本地目录/引用与远程仓均已同步 |
