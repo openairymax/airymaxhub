@@ -97,7 +97,7 @@ Each sub-repository contains its own LICENSE file that enforces the
 applicable layer. The complete list of LICENSE files and their layer
 assignments is documented in:
 
-  docs/AirymaxOS/50-engineering-standards/12-license-policy.md
+  docs/docs-linux/50-engineering-standards/12-license-policy.md
 
 For a quick reference, see the table below:
 
@@ -167,7 +167,7 @@ about this license policy, contact:
   Security reports: security@spharx.cn  (responsible disclosure, see SECURITY.md)
 
 For the latest version of this license policy, see:
-  docs/AirymaxOS/50-engineering-standards/12-license-policy.md
+  docs/docs-linux/50-engineering-standards/12-license-policy.md
 
 ===============================================================================
 FULL TEXT OF THE OPEN-SOURCE CORE LICENSES (L3)
