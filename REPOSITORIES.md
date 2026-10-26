@@ -1,7 +1,7 @@
 # 仓库结构与子模块文档（REPOSITORIES.md）
 
 > 本文件是 OpenAirymax 全部 39 个 git 仓库的权威索引，记录 `.gitmodules` 层次、URL 约定与分支策略。
-> 最后更新：2026-09-15（新增 agent-linux 下 distro 叶子仓）· 维护者：SPHARX Ltd.
+> 最后更新：2026-10-26（GitHub 侧 agent-linux 仓名补完）· 维护者：SPHARX Ltd.
 
 ---
 
@@ -252,6 +252,7 @@ git push
 | 2026-08-23 | **v0.1.3 双工程结构**：新增 agent-runtim 用户态大管理仓（收编 agentrt/ecosystem/products/sdk）；agentrt-linux 改名 agent-linux；伞仓仅收编 6 个管理仓；根目录 cmake/scripts 已随 v0.1.2 迁入 agentrt | `a2b0b36`（agent-runtim）/ 伞仓提交见 git log |
 | 2026-08-23 | **v0.1.4 更名**：用户态大管理仓 agent-runtim → **agent-workload**；顶层仓 devtools → **tools**；本地目录、gitlink、模块存储目录、`.gitmodules` / `.git/config` 与全部引用已同步；远程仓已由维护者完成改名 | agent-workload / tools / 伞仓提交见 git log |
 | 2026-09-15 | **新增 distro 叶子仓**（agent-linux 下第 9 个）：OS 镜像组装层（kickstart/comps/rpm lockfile/ostree/UKUI 桌面集成）；决策：OS 侧系统桌面采用 UKUI 4.x（openKylin/openEuler 线），以 RPM 消费、与内核仓单向依赖 | `b379353`（distro）/ agent-linux 与伞仓提交见 git log |
+| 2026-10-26 | **GitHub 侧仓名补完**：活跃仓 `agentrt-linux` → `agent-linux`（旧名 301 重定向）；2026-09-03 停更旧仓改名归档为 `agent-linux-legacy`；至此 GitHub / AtomGit / `.gitmodules` / 发行物命名四处一致 | 见 git log |
 
 ---
 
