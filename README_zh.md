@@ -16,8 +16,9 @@ OpenAirymax 开源极境，是一个专注于智能体工程的开源组织。
 
 ## 欢迎交流
 
-扫码进入飞书群：
+扫码进入飞书群：  
 
+<img src=".github/image/openairymax-feishu.jpg" alt="飞书" width="150" />
 
 ## 许可证
 
