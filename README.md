@@ -8,16 +8,7 @@ OpenAirymax releases two co-designed systems at different layers of the stack:
 
 - **AirymaxRT** (Agent Runtime Platform Engineering) — a cross-platform (Linux, Windows, macOS) execution base for AI agents, delivering a stable, production-grade agent runtime.
 - **AirymaxOS** (Agent Operating System) — a Linux-based agent OS (Linux 6.6 / 7.1), purpose-built for agent workloads — a truly native agent operating system.
-- RT and OS share the same architecture; composed together they form the complete Airymax stack, and either one also runs independently.
-
-## Structure
-
-The `airymaxhub` umbrella repo:
-
-- **user mode** → `agent-workload` [AirymaxRT platform engineering]
-- **kernel mode** → `agent-linux` [AirymaxOS operating system]
-
-> OpenAirymax uses a multi-repo hierarchy. For the full submodule layout, URL conventions, and branching strategy, see [REPOSITORIES.md](REPOSITORIES.md).
+- RT and OS share the same architecture; composed together they form the complete Airymax stack, and either one also runs independently.  
 
 ## Community
 
