@@ -14,3 +14,7 @@
 	path = tools
 	url = ../tools.git
 	branch = main
+[submodule "compute"]
+	path = compute
+	url = ../compute.git
+	branch = main
