@@ -1,7 +1,7 @@
 # 仓库结构与子模块文档（REPOSITORIES.md）
 
-> 本文件是 OpenAirymax 全部 39 个 git 仓库的权威索引，记录 `.gitmodules` 层次、URL 约定与分支策略。
-> 最后更新：2026-10-26（GitHub 侧 agent-linux 仓名补完）· 维护者：SPHARX Ltd.
+> 本文件是 OpenAirymax 全部 43 个 git 仓库的权威索引，记录 `.gitmodules` 层次、URL 约定与分支策略。
+> 最后更新：2026-11-05（compute 品牌名定为 amax / AirymaxCompute，取代早期工作名 AMCS；新增 compute 顶层仓与 docs-compute 子文档仓）· 维护者：SPHARX Ltd.
 
 ---
 
@@ -11,12 +11,12 @@ OpenAirymax 采用 **伞仓 + 双工程大管理仓 + 管理仓 + 叶子仓 + �
 
 | 层级 | 数量 | 说明 |
 |------|------|------|
-| 伞仓（umbrella） | 1 | `airymaxhub`，聚合 6 个管理仓 |
+| 伞仓（umbrella） | 1 | `airymaxhub`，聚合 7 个子模块 |
 | 大管理仓（super-management） | 2 | `agent-workload`（用户态工程，v0.1.4 由 agent-runtim 改名）/ `agent-linux`（内核态工程，原 agentrt-linux），各自通过 `.gitmodules` 管理其下管理仓/叶子仓 |
 | 管理仓（management） | 4 | `agentrt` / `sdk` / `ecosystem` / `products`，位于 agent-workload 下，各自通过 `.gitmodules` 管理叶子仓 |
 | 叶子仓（leaf） | 30 | 分布在 4 个管理仓下（6 + 8 + 5 + 2）与 agent-linux 下（9） |
-| 顶层仓（top-level） | 4 | `tools`（v0.1.4 由 devtools 改名）/ `docs` / `closed-docs` / `closed-dev-build`，直属伞仓 |
-| **合计** | **41** | — |
+| 顶层仓（top-level） | 6 | `tools`（v0.1.4 由 devtools 改名）/ `docs` / `closed-docs` / `closed-dev-build` / `compute`（amax / AirymaxCompute 算力栈）/ `docs-compute`（amax 公开文档，挂于 docs 下），直属伞仓或经 docs 仓挂载 |
+| **合计** | **43** | — |
 
 > **双工程结构（v0.1.3 决策，v0.1.4 更名）**：区分用户态工程与内核态工程——
 > - **agent-workload**（用户态）：agentrt（核心运行时）+ ecosystem（生态）+ products（策略模块聚合）+ sdk（开发者 SDK）
@@ -57,32 +57,35 @@ airymaxhub/                                     # 伞仓（git@atomgit.com:opena
 │   ├── cloudnative/         [叶子仓]               # K8s CRD + containerd shim + OCI + CNI
 │   └── tests-linux/     [叶子仓]               # 单元 + 集成 + 形式化验证(seL4) + Soak + Chaos
 │
+├── compute/         [顶层仓] → compute.git             # amax（AirymaxCompute）算力栈：基于 llama.cpp/ggml 的整合与守护层
 ├── docs/            [顶层仓] → docs.git
+│   └── docs-closed/ · docs-linux/ · docs-workload/ · openstandards/ · docs-compute/  [子文档仓 ×5，经 docs/.gitmodules 注册]
 ├── tools/           [顶层仓] → tools.git           # 开发工具（v0.1.4 由 devtools 改名）
-├── closed-docs/     [顶层仓] → closed-docs.git
 └── closed-dev-build/ [顶层仓] → closed-dev-build.git
 ```
 
-> **伞仓直属目录说明**：伞仓根不含直属源码目录（v0.1.3 起仅收编 6 个管理仓子模块）。
+> **伞仓直属目录说明**：伞仓根不含直属源码目录（v0.1.3 起收编子模块，v0.1.5 起新增 compute 顶层仓，共 7 个）。
 > 构建系统模块（`cmake/`）与官方安装器（`scripts/`）自 v0.1.2 起迁入
 > agentrt 管理仓——构建系统与安装器属 IRON-9 [IND] 完全独立层，用户态
 > （agent-workload）与内核态（agent-linux）各自独立。
 
 ## 3. `.gitmodules` 文件清单
 
-全工程共 **7 个 `.gitmodules` 文件**，分别位于伞仓、2 个大管理仓与 4 个管理仓根目录：
+全工程共 **8 个 `.gitmodules` 文件**，分别位于伞仓、2 个大管理仓、4 个管理仓与 docs 仓根目录：
 
 | # | 文件路径 | 子模块数 | 子模块类型 | 说明 |
 |---|----------|----------|------------|------|
-| 1 | `airymaxhub/.gitmodules` | 6 | 大管理仓 + 顶层仓 | agent-workload, agent-linux, docs, closed-docs, tools, closed-dev-build |
+| 1 | `airymaxhub/.gitmodules` | 7 | 大管理仓 + 顶层仓 | agent-workload, agent-linux, docs, closed-docs, tools, closed-dev-build, compute |
 | 2 | `agent-workload/.gitmodules` | 4 | 管理仓 | agentrt, ecosystem, products, sdk |
 | 3 | `agent-workload/agentrt/.gitmodules` | 6 | 叶子仓 | atoms, commons, daemons, gateway, heapstore, protocols |
 | 4 | `agent-linux/.gitmodules` | 9 | 叶子仓 | kernel, memory, security, cognition, services, system, cloudnative, tests-linux, distro |
 | 5 | `agent-workload/sdk/.gitmodules` | 8 | 叶子仓 | sdk-python, sdk-go, sdk-rust, sdk-typescript, console, tui, desktop, docker |
 | 6 | `agent-workload/ecosystem/.gitmodules` | 5 | 叶子仓 | manager, prompts, markets, skills, agents |
 | 7 | `agent-workload/products/.gitmodules` | 2 | 叶子仓 | memoryrovol, cupolas |
+| 8 | `docs/.gitmodules` | 5 | 子文档仓 | docs-closed, docs-linux, docs-workload, openstandards, docs-compute |
 
-> 顶层仓（tools / docs / closed-docs / closed-dev-build）为单仓，不含 `.gitmodules`。
+> 除 docs 外，其余顶层仓（tools / closed-docs / closed-dev-build / compute）为单仓，不含 `.gitmodules`；
+> docs 通过其自身 `.gitmodules` 管理 5 个子文档仓。
 
 ## 4. URL 约定
 
@@ -118,6 +121,8 @@ git@atomgit.com:openairymax/<仓库名>.git
 | docs | 顶层仓 | `git@atomgit.com:openairymax/docs.git` | `main` |
 | closed-docs | 顶层仓 | `git@atomgit.com:openairymax/closed-docs.git` | `main` |
 | closed-dev-build | 顶层仓 | `git@atomgit.com:openairymax/closed-dev-build.git` | `main` |
+| compute | 顶层仓 | `git@atomgit.com:openairymax/compute.git` | `main` |
+| docs-compute | 子文档仓（docs 下） | `git@atomgit.com:openairymax/docs-compute.git` | `main` |
 | atoms | 叶子仓 | `git@atomgit.com:openairymax/atoms.git` | `develop/hubs-01` |
 | commons | 叶子仓 | `git@atomgit.com:openairymax/commons.git` | `develop/hubs-01` |
 | cupolas | 叶子仓 | `git@atomgit.com:openairymax/cupolas.git` | `develop/hubs-01` |
@@ -156,7 +161,7 @@ git@atomgit.com:openairymax/<仓库名>.git
 | 伞仓 | `main` | `airymaxhub` |
 | 大管理仓 | `main` | agent-workload / agent-linux |
 | 管理仓 | `main` | agentrt / sdk / ecosystem / products |
-| 顶层仓 | `main` | tools / docs / closed-docs / closed-dev-build |
+| 顶层仓 | `main` | tools / docs / closed-docs / closed-dev-build / compute / docs-compute |
 | 叶子仓 | `develop/hubs-01` | 全部 29 个叶子仓统一使用此分支（agents 例外：`main`；kernel 例外：`ALK-6.6-dev`） |
 
 > 在 `.gitmodules` 中，每个子模块均显式声明 `branch = ` 字段，确保 `git submodule update --remote` 行为可预期。
@@ -253,6 +258,9 @@ git push
 | 2026-08-23 | **v0.1.4 更名**：用户态大管理仓 agent-runtim → **agent-workload**；顶层仓 devtools → **tools**；本地目录、gitlink、模块存储目录、`.gitmodules` / `.git/config` 与全部引用已同步；远程仓已由维护者完成改名 | agent-workload / tools / 伞仓提交见 git log |
 | 2026-09-15 | **新增 distro 叶子仓**（agent-linux 下第 9 个）：OS 镜像组装层（kickstart/comps/rpm lockfile/ostree/UKUI 桌面集成）；决策：OS 侧系统桌面采用 UKUI 4.x（openKylin/openEuler 线），以 RPM 消费、与内核仓单向依赖 | `b379353`（distro）/ agent-linux 与伞仓提交见 git log |
 | 2026-10-26 | **GitHub 侧仓名补完**：活跃仓 `agentrt-linux` → `agent-linux`（旧名 301 重定向）；2026-09-03 停更旧仓改名归档为 `agent-linux-legacy`；至此 GitHub / AtomGit / `.gitmodules` / 发行物命名四处一致 | 见 git log |
+| 2026-11-04 | **新增 compute 顶层仓**：AMCS（Airymax Compute Stack）——基于 llama.cpp/ggml 的整合与守护层，Apache-2.0；注册为伞仓子模块（`../compute.git`，`main`）；GitHub / Gitee 镜像待建 | 伞仓提交见 git log |
+| 2026-11-04 | **新增 docs-compute 子文档仓**（docs 下第 5 个）：AMCS 公开设计文档库（ADR / 后端插件接口 / L0–L3 能力分级 / 评测 harness / 芯片伙伴接入指南）；注册于 `docs/.gitmodules`（`main`）；GitHub / Gitee 镜像待建 | `a5f10f2`（docs-compute）/ docs 与伞仓提交见 git log |
+| 2026-11-05 | **命名定稿**：品牌名/命令名定为 **amax**（全称 AirymaxCompute，源自 Airy**max**，「极」的母品牌回响）——取代早期工作名 AMCS/AMCC 与命令名 amcs；经 40+ 候选占用检索（AMCS 撞爱尔兰金融软件公司、airy/airyac/amcs 均有噪音或不可发音），amax 在 crates.io/PyPI/npm/GitHub 均无活跃占用；仓库名（compute / docs-compute）与中文品牌「极境算力栈」不变；两个 README 已同步 | 待提交 |
 
 ---
 
