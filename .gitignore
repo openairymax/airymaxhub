@@ -5,6 +5,7 @@
 # 伞仓必要文件（白名单）
 !.gitignore
 !.gitmodules
+!.mailmap
 !README.md
 !README_zh.md
 !REPOSITORIES.md
